@@ -1,4 +1,9 @@
 # FloatPicture 2.0（悬浮图片2）
+
+<p align="center">
+  <img src="docs/logo.png" alt="FloatPicture Logo" width="240">
+</p>
+
 ----------  
 安卓图片悬浮窗软件（Floating Image App for Android）
 
