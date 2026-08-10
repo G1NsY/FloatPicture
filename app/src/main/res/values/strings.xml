@@ -54,12 +54,12 @@
     <string name="about">About</string>
     <string name="application_version">Version:</string>
     <string name="author">XFY9326(ClareX)</string>
-    <string name="website">https://github.com/G1NsY/FloatPicture</string>
+    <string name="website">https://github.com/G1NsY/FloatPicture2</string>
     <string name="application_author">Original Author:</string>
-    <string name="application_modified_by">Modified By:</string>
+    <string name="application_modified_by">Maintained and modified by:</string>
     <string name="modified_author">G1NsY(RY)</string>
     <string name="open_source_license">Open Source License</string>
-    <string name="copyright">Copyright © 2017 XFY9326.\nCopyright © 2026 G1NsY.\nAll rights reserved.</string>
+    <string name="copyright">Original work Copyright © 2017 XFY9326.\nModifications Copyright © 2026 G1NsY.\nLicensed under GNU GPL v3 or later.</string>
     <string name="imageview_app_icon">Application Icon</string>
     <string name="action_warn_manage_list_empty">No Picture is showing now.\nClick + Button to create one.</string>
     <string name="imageview_collapsing_toolbar_head">Collapsing Toolbar</string>
