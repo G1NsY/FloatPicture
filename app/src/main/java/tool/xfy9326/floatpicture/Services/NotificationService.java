@@ -19,6 +19,8 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
 import tool.xfy9326.floatpicture.Activities.MainActivity;
@@ -26,6 +28,7 @@ import tool.xfy9326.floatpicture.MainApplication;
 import tool.xfy9326.floatpicture.Methods.ManageMethods;
 import tool.xfy9326.floatpicture.R;
 import tool.xfy9326.floatpicture.Utils.Config;
+import tool.xfy9326.floatpicture.Utils.PictureData;
 import tool.xfy9326.floatpicture.View.ManageListAdapter;
 
 public class NotificationService extends Service {
@@ -65,6 +68,8 @@ public class NotificationService extends Service {
             notificationButtonBroadcastReceiver = new NotificationButtonBroadcastReceiver();
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK);
+            intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_PREVIOUS);
+            intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_NEXT);
             intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_UPDATE_COUNT);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 registerReceiver(notificationButtonBroadcastReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED);
@@ -91,7 +96,7 @@ public class NotificationService extends Service {
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
         // 移除所有悬浮窗
-        ManageMethods.setAllWindowsVisible(this, false);
+        ManageMethods.hideAllWindowsRuntime(this);
         // 停止前台服务
         stopSelf();
     }
@@ -99,7 +104,7 @@ public class NotificationService extends Service {
     @Override
     public void onDestroy() {
         // 在服务销毁时也确保窗口被关闭
-        ManageMethods.setAllWindowsVisible(this, false);
+        ManageMethods.hideAllWindowsRuntime(this);
         
         if (notificationButtonBroadcastReceiver != null) {
             unregisterReceiver(notificationButtonBroadcastReceiver);
@@ -129,16 +134,49 @@ public class NotificationService extends Service {
 
         remoteViews = new RemoteViews(getPackageName(), R.layout.notification_manage);
         remoteViews.setImageViewResource(R.id.imageview_notification_application, R.mipmap.ic_launcher);
-        remoteViews.setTextViewText(R.id.textview_picture_num, getString(R.string.notification_picture_count, String.valueOf(mainApplication.getViewCount())));
+        updatePictureStatus(mainApplication);
+
+        remoteViews.setImageViewResource(R.id.imageview_previous_picture, android.R.drawable.ic_media_previous);
+        Intent intent_previous = new Intent(Config.INTENT_ACTION_NOTIFICATION_PREVIOUS).setPackage(getPackageName());
+        PendingIntent pendingIntent_previous = PendingIntent.getBroadcast(this, 1, intent_previous, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        remoteViews.setOnClickPendingIntent(R.id.imageview_previous_picture, pendingIntent_previous);
 
         remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
-        Intent intent_picture_show = new Intent();
-        intent_picture_show.setAction(Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK);
-        PendingIntent pendingIntent_picture_show = PendingIntent.getBroadcast(this, 1, intent_picture_show, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent_picture_show = new Intent(Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK).setPackage(getPackageName());
+        PendingIntent pendingIntent_picture_show = PendingIntent.getBroadcast(this, 2, intent_picture_show, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         remoteViews.setOnClickPendingIntent(R.id.imageview_set_picture_view, pendingIntent_picture_show);
+
+        remoteViews.setImageViewResource(R.id.imageview_next_picture, android.R.drawable.ic_media_next);
+        Intent intent_next = new Intent(Config.INTENT_ACTION_NOTIFICATION_NEXT).setPackage(getPackageName());
+        PendingIntent pendingIntent_next = PendingIntent.getBroadcast(this, 3, intent_next, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        remoteViews.setOnClickPendingIntent(R.id.imageview_next_picture, pendingIntent_next);
 
         builder.setContent(remoteViews);
         return builder;
+    }
+
+    private void updatePictureStatus(MainApplication mainApplication) {
+        PictureData pictureData = new PictureData();
+        LinkedHashMap<String, String> pictures = pictureData.getListArray();
+        if (pictures.isEmpty()) {
+            remoteViews.setTextViewText(R.id.textview_picture_num,
+                    getString(R.string.notification_picture_count, "0"));
+            return;
+        }
+
+        ArrayList<String> pictureIds = new ArrayList<>(pictures.keySet());
+        String currentPictureId = mainApplication.getCurrentPictureId();
+        int currentIndex = pictureIds.indexOf(currentPictureId);
+        if (currentIndex < 0) {
+            currentIndex = 0;
+            currentPictureId = pictureIds.get(0);
+            mainApplication.setCurrentPictureId(currentPictureId);
+        }
+        remoteViews.setTextViewText(R.id.textview_picture_num,
+                getString(R.string.notification_picture_position,
+                        currentIndex + 1,
+                        pictureIds.size(),
+                        pictures.get(currentPictureId)));
     }
 
     private class NotificationButtonBroadcastReceiver extends BroadcastReceiver {
@@ -147,23 +185,50 @@ public class NotificationService extends Service {
         public void onReceive(Context context, Intent intent) {
             if (remoteViews != null) {
                 MainApplication mainApplication = (MainApplication) getApplicationContext();
+                boolean refreshPictureList = false;
                 if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK)) {
                     if (mainApplication.getWinVisible()) {
-                        ManageMethods.setAllWindowsVisible(context, false);
+                        if (mainApplication.isPictureSequenceMode()) {
+                            ManageMethods.setSequenceWindowVisible(context, false);
+                        } else {
+                            ManageMethods.setAllWindowsVisible(context, false);
+                        }
                         remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_visible);
                         mainApplication.setWinVisible(false);
                     } else {
-                        ManageMethods.setAllWindowsVisible(context, true);
-                        remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
-                        mainApplication.setWinVisible(true);
+                        if (mainApplication.isPictureSequenceMode()) {
+                            ManageMethods.setSequenceWindowVisible(context, true);
+                        } else {
+                            ManageMethods.showFirstPicture(context);
+                        }
+                        remoteViews.setImageViewResource(
+                                R.id.imageview_set_picture_view,
+                                mainApplication.getWinVisible() ? R.drawable.ic_invisible : R.drawable.ic_visible);
                     }
-                    ManageListAdapter manageListAdapter = ((MainApplication) getApplicationContext()).getManageListAdapter();
+                    refreshPictureList = true;
+                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_PREVIOUS)) {
+                    if (ManageMethods.switchPicture(context, -1)) {
+                        remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
+                        refreshPictureList = true;
+                    }
+                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_NEXT)) {
+                    if (ManageMethods.switchPicture(context, 1)) {
+                        remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
+                        refreshPictureList = true;
+                    }
+                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_UPDATE_COUNT)) {
+                    // Status text is refreshed below after additions, deletions or reordering.
+                }
+                if (refreshPictureList) {
+                    ManageListAdapter manageListAdapter = mainApplication.getManageListAdapter();
                     if (manageListAdapter != null) {
                         manageListAdapter.notifyDataSetChanged();
                     }
-                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_UPDATE_COUNT)) {
-                    remoteViews.setTextViewText(R.id.textview_picture_num, getString(R.string.notification_picture_count, String.valueOf(mainApplication.getViewCount())));
                 }
+                remoteViews.setImageViewResource(
+                        R.id.imageview_set_picture_view,
+                        mainApplication.getWinVisible() ? R.drawable.ic_invisible : R.drawable.ic_visible);
+                updatePictureStatus(mainApplication);
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 builder_manage.setContent(remoteViews);
                 Objects.requireNonNull(notificationManager).notify(Config.NOTIFICATION_ID, builder_manage.build());

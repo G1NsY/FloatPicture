@@ -19,6 +19,8 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -77,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(manageListAdapter);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setEmptyView(findViewById(R.id.layout_widget_empty_view));
+        attachPictureReordering(recyclerView);
 
         FloatingActionButton floatingActionButton = findViewById(R.id.main_button_add);
         floatingActionButton.setOnClickListener(view -> ManageMethods.SelectPicture(MainActivity.this));
@@ -129,6 +132,41 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void attachPictureReordering(AdvancedRecyclerView recyclerView) {
+        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
+            private boolean orderChanged;
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                int fromPosition = viewHolder.getAdapterPosition();
+                int toPosition = target.getAdapterPosition();
+                boolean moved = manageListAdapter.moveItem(fromPosition, toPosition);
+                orderChanged = orderChanged || moved;
+                return moved;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                // Swipe actions are deliberately disabled.
+            }
+
+            @Override
+            public void clearView(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                if (orderChanged) {
+                    manageListAdapter.saveCurrentOrder();
+                    orderChanged = false;
+                    SnackShow(MainActivity.this, R.string.action_picture_order_saved);
+                }
+            }
+        };
+        new ItemTouchHelper(callback).attachToRecyclerView(recyclerView);
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -149,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
                 if (position >= 0) {
                     manageListAdapter.updateData();
                     manageListAdapter.notifyItemChanged(position);
+                    ManageMethods.updateNotificationCount(this);
                 }
             }
         } else if (requestCode == Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_GET_PICTURE) {

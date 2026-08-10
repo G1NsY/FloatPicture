@@ -1,9 +1,11 @@
 package tool.xfy9326.floatpicture.View;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
@@ -12,6 +14,8 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,8 +31,11 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import tool.xfy9326.floatpicture.Methods.ImageMethods;
+import tool.xfy9326.floatpicture.Methods.IOMethods;
+import tool.xfy9326.floatpicture.Methods.ManageMethods;
 import tool.xfy9326.floatpicture.Methods.WindowsMethods;
 import tool.xfy9326.floatpicture.R;
 import tool.xfy9326.floatpicture.Utils.Config;
@@ -37,6 +44,7 @@ import tool.xfy9326.floatpicture.Utils.PictureData;
 public class PictureSettingsFragment extends PreferenceFragmentCompat {
     private final static String WINDOW_CREATED = "WINDOW_CREATED";
     private boolean Edit_Mode;
+    private boolean originallyVisible = true;
     private boolean Window_Created;
     private boolean onUseEditPicture = false;
     private LayoutInflater inflater;
@@ -66,6 +74,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
     private int lastScreenWidth;
     private int lastScreenHeight;
     private AlertDialog currentDialog;
+    private final AtomicInteger outlinePreviewGeneration = new AtomicInteger();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -163,6 +172,9 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                     PictureId = intent.getStringExtra(Config.INTENT_PICTURE_EDIT_ID);
                     pictureData.setDataControl(PictureId);
                     PictureName = pictureData.getListArray().get(PictureId);
+                    originallyVisible = pictureData.getBoolean(
+                            Config.DATA_PICTURE_SHOW_ENABLED,
+                            Config.DATA_DEFAULT_PICTURE_SHOW_ENABLED);
                     position_x = pictureData.getInt(Config.DATA_PICTURE_POSITION_X, Config.DATA_DEFAULT_PICTURE_POSITION_X);
                     position_y = pictureData.getInt(Config.DATA_PICTURE_POSITION_Y, Config.DATA_DEFAULT_PICTURE_POSITION_Y);
                     picture_degree = pictureData.getFloat(Config.DATA_PICTURE_DEGREE, Config.DATA_DEFAULT_PICTURE_DEGREE);
@@ -177,9 +189,13 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                     floatImageView = ImageMethods.getFloatImageViewById(requireContext(), PictureId);
                 } else {
                     //New
+                    originallyVisible = true;
                     PictureId = ImageMethods.setNewImage(getActivity(), intent.getData());
                     pictureData.setDataControl(PictureId);
-                    PictureName = getString(R.string.new_picture_name);
+                    PictureName = ImageMethods.getImageDisplayName(requireContext(), intent.getData());
+                    if (PictureName == null || PictureName.isEmpty()) {
+                        PictureName = getString(R.string.new_picture_name);
+                    }
                     position_x = Config.DATA_DEFAULT_PICTURE_POSITION_X;
                     position_y = Config.DATA_DEFAULT_PICTURE_POSITION_Y;
                     picture_alpha = Config.DATA_DEFAULT_PICTURE_ALPHA;
@@ -214,8 +230,18 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             setPictureName(preference);
             return true;
         });
+        Preference replacePreference = requirePreference(Config.PREFERENCE_PICTURE_REPLACE);
+        replacePreference.setVisible(Edit_Mode);
+        replacePreference.setOnPreferenceClickListener(preference -> {
+            selectReplacementPicture();
+            return true;
+        });
         requirePreference(Config.PREFERENCE_PICTURE_RESIZE).setOnPreferenceClickListener(preference -> {
             setPictureSize();
+            return true;
+        });
+        requirePreference(Config.PREFERENCE_PICTURE_OUTLINE).setOnPreferenceClickListener(preference -> {
+            showOutlineDialog();
             return true;
         });
         requirePreference(Config.PREFERENCE_PICTURE_DEGREE).setOnPreferenceClickListener(preference -> {
@@ -249,6 +275,253 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             setPicturePosition();
             return true;
         });
+    }
+
+    private void selectReplacementPicture() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(intent, Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_REPLACE);
+    }
+
+    private void showOutlineDialog() {
+        if (bitmap == null || bitmap.isRecycled()) return;
+
+        View dialogView = inflater.inflate(
+                R.layout.dialog_extract_outline,
+                requireActivity().findViewById(android.R.id.content),
+                false);
+        ImageView previewView = dialogView.findViewById(R.id.image_outline_preview);
+        ProgressBar progressBar = dialogView.findViewById(R.id.progress_outline);
+        TextView detailLabel = dialogView.findViewById(R.id.text_outline_detail);
+        TextView contrastLabel = dialogView.findViewById(R.id.text_outline_contrast);
+        SeekBar detailBar = dialogView.findViewById(R.id.seek_outline_detail);
+        SeekBar contrastBar = dialogView.findViewById(R.id.seek_outline_contrast);
+        detailBar.setProgress(1); // Radius 2: close to Photoshop's useful default.
+        contrastBar.setProgress(65);
+
+        int maxPreviewSide = 900;
+        float previewScale = Math.min(1f, maxPreviewSide
+                / (float) Math.max(bitmap.getWidth(), bitmap.getHeight()));
+        int previewWidth = Math.max(1, Math.round(bitmap.getWidth() * previewScale));
+        int previewHeight = Math.max(1, Math.round(bitmap.getHeight() * previewScale));
+        Bitmap previewSource = previewScale < 1f
+                ? Bitmap.createScaledBitmap(bitmap, previewWidth, previewHeight, true)
+                : bitmap.copy(Bitmap.Config.ARGB_8888, false);
+        Bitmap[] displayedPreview = new Bitmap[1];
+        int originalFloatViewVisibility = floatImageView.getVisibility();
+
+        AlertDialog outlineDialog = new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.settings_picture_outline)
+                .setView(dialogView)
+                .setCancelable(false)
+                .setPositiveButton(R.string.settings_picture_outline_apply, null)
+                .setNegativeButton(R.string.cancel, null)
+                .create();
+        currentDialog = outlineDialog;
+
+        Runnable refreshLabelsAndPreview = () -> {
+            int radius = detailBar.getProgress() + 1;
+            int contrast = contrastBar.getProgress();
+            detailLabel.setText(getString(R.string.settings_picture_outline_detail, radius));
+            contrastLabel.setText(getString(R.string.settings_picture_outline_contrast, contrast));
+            requestOutlinePreview(previewSource, radius, contrast,
+                    previewView, progressBar, displayedPreview, outlineDialog);
+        };
+
+        SeekBar.OnSeekBarChangeListener previewListener = new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int radius = detailBar.getProgress() + 1;
+                detailLabel.setText(getString(R.string.settings_picture_outline_detail, radius));
+                contrastLabel.setText(getString(
+                        R.string.settings_picture_outline_contrast,
+                        contrastBar.getProgress()));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                refreshLabelsAndPreview.run();
+            }
+        };
+        detailBar.setOnSeekBarChangeListener(previewListener);
+        contrastBar.setOnSeekBarChangeListener(previewListener);
+
+        outlineDialog.setOnDismissListener(dialog -> {
+            outlinePreviewGeneration.incrementAndGet();
+            floatImageView.setVisibility(originalFloatViewVisibility);
+            previewView.setImageDrawable(null);
+            if (displayedPreview[0] != null && !displayedPreview[0].isRecycled()) {
+                displayedPreview[0].recycle();
+                displayedPreview[0] = null;
+            }
+        });
+        outlineDialog.setOnShowListener(unused -> {
+            // The source is a system overlay and otherwise sits on top of the
+            // outline dialog, making the two previews overlap.
+            floatImageView.setVisibility(View.INVISIBLE);
+            refreshLabelsAndPreview.run();
+            outlineDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(button -> {
+                outlinePreviewGeneration.incrementAndGet();
+                detailBar.setEnabled(false);
+                contrastBar.setEnabled(false);
+                outlineDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                outlineDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(false);
+                progressBar.setVisibility(View.VISIBLE);
+
+                int radius = detailBar.getProgress() + 1;
+                int contrast = contrastBar.getProgress();
+                Bitmap source = bitmap;
+                new Thread(() -> applyOutline(source, radius, contrast, outlineDialog, progressBar),
+                        "FloatPicture-outline-apply").start();
+            });
+        });
+        outlineDialog.show();
+    }
+
+    private void requestOutlinePreview(Bitmap source, int radius, int contrast,
+                                       ImageView previewView, ProgressBar progressBar,
+                                       Bitmap[] displayedPreview, AlertDialog owner) {
+        int generation = outlinePreviewGeneration.incrementAndGet();
+        progressBar.setVisibility(View.VISIBLE);
+        new Thread(() -> {
+            Bitmap result = ImageMethods.createRedOutline(source, radius, contrast);
+            if (!isAdded()) {
+                if (result != null) result.recycle();
+                return;
+            }
+            requireActivity().runOnUiThread(() -> {
+                if (generation != outlinePreviewGeneration.get()
+                        || !owner.isShowing()) {
+                    if (result != null && !result.isRecycled()) result.recycle();
+                    return;
+                }
+                progressBar.setVisibility(View.GONE);
+                if (result == null) {
+                    Toast.makeText(requireContext(),
+                            R.string.settings_picture_outline_failed,
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Bitmap previous = displayedPreview[0];
+                previewView.setImageBitmap(result);
+                displayedPreview[0] = result;
+                if (previous != null && !previous.isRecycled()) previous.recycle();
+            });
+        }, "FloatPicture-outline-preview").start();
+    }
+
+    private void applyOutline(Bitmap source, int radius, int contrast,
+                              AlertDialog owner, ProgressBar progressBar) {
+        Bitmap result = ImageMethods.createRedOutline(source, radius, contrast);
+        int quality = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                .getInt(Config.PREFERENCE_NEW_PICTURE_QUALITY, 80);
+        boolean saved = result != null && IOMethods.replaceBitmap(
+                result,
+                quality,
+                Config.DEFAULT_PICTURE_DIR + PictureId);
+
+        if (!isAdded()) {
+            if (result != null && !result.isRecycled()) result.recycle();
+            return;
+        }
+        requireActivity().runOnUiThread(() -> {
+            if (!saved || result == null) {
+                if (result != null && !result.isRecycled()) result.recycle();
+                progressBar.setVisibility(View.GONE);
+                owner.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                owner.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(true);
+                Toast.makeText(requireContext(),
+                        R.string.settings_picture_outline_failed,
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Bitmap previous = bitmap;
+            bitmap = result;
+            if (floatImageView.isAttachedToWindow()) {
+                WindowsMethods.updateWindow(windowManager, floatImageView, bitmap,
+                        touch_and_move, allow_picture_over_layout,
+                        zoom_x, zoom_y, picture_degree, position_x, position_y);
+            } else {
+                floatImageView.setImageBitmap(ImageMethods.resizeBitmap(
+                        bitmap, zoom_x, zoom_y, picture_degree));
+            }
+            floatImageView.setAlpha(picture_alpha);
+            if (previous != null && previous != bitmap && !previous.isRecycled()) {
+                previous.recycle();
+            }
+            owner.dismiss();
+            Toast.makeText(requireContext(),
+                    R.string.settings_picture_outline_success,
+                    Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_REPLACE
+                && resultCode == Activity.RESULT_OK
+                && data != null
+                && data.getData() != null) {
+            replacePicture(data.getData());
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void replacePicture(Uri replacementUri) {
+        syncPositionFromView();
+        Activity activity = requireActivity();
+        AlertDialog.Builder loading = new AlertDialog.Builder(activity);
+        loading.setCancelable(false);
+        View loadingView = inflater.inflate(
+                R.layout.dialog_loading,
+                activity.findViewById(R.id.layout_dialog_loading));
+        loading.setView(loadingView);
+        AlertDialog loadingDialog = loading.show();
+
+        new Thread(() -> {
+            boolean replaced = ImageMethods.replaceImage(activity, replacementUri, PictureId);
+            Bitmap replacementBitmap = replaced
+                    ? ImageMethods.getShowBitmap(activity, PictureId)
+                    : null;
+            activity.runOnUiThread(() -> {
+                loadingDialog.cancel();
+                if (replacementBitmap == null) {
+                    Toast.makeText(activity, R.string.action_replace_picture_failed, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Bitmap previousBitmap = bitmap;
+                bitmap = replacementBitmap;
+                if (floatImageView.isAttachedToWindow()) {
+                    WindowsMethods.updateWindow(
+                            windowManager,
+                            floatImageView,
+                            bitmap,
+                            touch_and_move,
+                            allow_picture_over_layout,
+                            zoom_x,
+                            zoom_y,
+                            picture_degree,
+                            position_x,
+                            position_y);
+                } else {
+                    floatImageView.setImageBitmap(
+                            ImageMethods.resizeBitmap(bitmap, zoom_x, zoom_y, picture_degree));
+                }
+                floatImageView.setAlpha(picture_alpha);
+                syncPositionToView(floatImageView, position_x, position_y);
+                if (previousBitmap != null && !previousBitmap.isRecycled()) {
+                    previousBitmap.recycle();
+                }
+                Toast.makeText(activity, R.string.action_replace_picture_success, Toast.LENGTH_SHORT).show();
+            });
+        }).start();
     }
 
     private void setAllowPictureOverLayout(boolean allow) {
@@ -1033,7 +1306,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
     }
 
     public void saveAllData() {
-        pictureData.put(Config.DATA_PICTURE_SHOW_ENABLED, true);
+        pictureData.put(Config.DATA_PICTURE_SHOW_ENABLED, Edit_Mode ? originallyVisible : true);
         pictureData.put(Config.DATA_PICTURE_ZOOM, zoom_x); // Backward compatibility: store X as main ZOOM? Or just ignore ZOOM? Let's update ZOOM to match X.
         pictureData.put(Config.DATA_PICTURE_ZOOM_X, zoom_x);
         pictureData.put(Config.DATA_PICTURE_ZOOM_Y, zoom_y);
@@ -1053,6 +1326,9 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         WindowsMethods.updateWindow(windowManager, floatImageView, bitmap, global_touchable, allow_picture_over_layout, zoom_x, zoom_y, picture_degree, position_x, position_y);
         syncPositionToView(floatImageView, position_x, position_y);
         ImageMethods.saveFloatImageViewById(requireActivity(), PictureId, floatImageView);
+        if (Edit_Mode) {
+            ManageMethods.finishWindowEditing(requireContext(), PictureId, originallyVisible);
+        }
     }
 
     public void clearEditView() {
@@ -1088,6 +1364,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             floatImageView.setMoveable(original_touch_and_move || global_touchable);
             WindowsMethods.updateWindow(windowManager, floatImageView, bitmap, original_touch_and_move || global_touchable, original_allow_picture_over_layout, original_zoom_x, original_zoom_y, original_degree, original_position_x, original_position_y);
             syncPositionToView(floatImageView, original_position_x, original_position_y);
+            ManageMethods.finishWindowEditing(requireContext(), PictureId, originallyVisible);
         }
 
     }

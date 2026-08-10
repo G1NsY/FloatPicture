@@ -12,6 +12,12 @@
             app:singleLine="true"
             app:summary="@string/settings_picture_name_sum"
             app:title="@string/settings_picture_name" />
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="settings_picture_replace"
+            app:singleLine="true"
+            app:summary="@string/settings_picture_replace_sum"
+            app:title="@string/settings_picture_replace" />
     </PreferenceCategory>
     <PreferenceCategory
         app:iconSpaceReserved="false"
@@ -23,6 +29,12 @@
             app:singleLine="true"
             app:summary="@string/settings_picture_resize_sum"
             app:title="@string/settings_picture_resize" />
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="settings_picture_outline"
+            app:singleLine="true"
+            app:summary="@string/settings_picture_outline_sum"
+            app:title="@string/settings_picture_outline" />
         <Preference
             android:selectAllOnFocus="true"
             app:iconSpaceReserved="false"

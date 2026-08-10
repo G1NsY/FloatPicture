@@ -10,8 +10,10 @@ import android.graphics.Bitmap;
 import android.view.View;
 import android.view.WindowManager;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import androidx.preference.PreferenceManager;
@@ -36,9 +38,26 @@ public class ManageMethods {
             LinkedHashMap<String, String> list = pictureData.getListArray();
             WindowManager windowManager = getWindowManager(mContext);
             if (list.size() > 0) {
+                String firstVisiblePictureId = null;
                 for (LinkedHashMap.Entry<?, ?> entry : list.entrySet()) {
-                    StartWin(mContext, windowManager, pictureData, entry.getKey().toString());
+                    String pictureId = entry.getKey().toString();
+                    pictureData.setDataControl(pictureId);
+                    if (firstVisiblePictureId == null
+                            && pictureData.getBoolean(Config.DATA_PICTURE_SHOW_ENABLED, Config.DATA_DEFAULT_PICTURE_SHOW_ENABLED)) {
+                        firstVisiblePictureId = pictureId;
+                    }
+                    StartWin(mContext, windowManager, pictureData, pictureId);
                 }
+                MainApplication mainApplication = (MainApplication) mContext.getApplicationContext();
+                String currentPictureId = mainApplication.getCurrentPictureId();
+                if (currentPictureId == null || !list.containsKey(currentPictureId)) {
+                    mainApplication.setCurrentPictureId(firstVisiblePictureId != null
+                            ? firstVisiblePictureId
+                            : list.keySet().iterator().next());
+                }
+                mainApplication.setWinVisible(firstVisiblePictureId != null);
+            } else {
+                ((MainApplication) mContext.getApplicationContext()).setWinVisible(false);
             }
         }
     }
@@ -66,31 +85,23 @@ public class ManageMethods {
     public static void DeleteWin(Context mContext, String id) {
         PictureData pictureData = new PictureData();
         pictureData.setDataControl(id);
-        if (pictureData.getBoolean(Config.DATA_PICTURE_SHOW_ENABLED, Config.DATA_DEFAULT_PICTURE_SHOW_ENABLED)) {
-            FloatImageView floatImageView = ImageMethods.getFloatImageViewById(mContext, id);
-            if (floatImageView != null) {
-                getWindowManager(mContext).removeView(floatImageView);
-                floatImageView.refreshDrawableState();
-            }
+        FloatImageView floatImageView = ImageMethods.getFloatImageViewById(mContext, id);
+        if (floatImageView != null) {
+            removeWindowIfAttached(getWindowManager(mContext), floatImageView);
+            floatImageView.refreshDrawableState();
         }
         pictureData.remove();
         ImageMethods.clearAllTemp(mContext, id);
+        MainApplication mainApplication = (MainApplication) mContext.getApplicationContext();
+        mainApplication.unregisterView(id);
+        if (id.equals(mainApplication.getCurrentPictureId())) {
+            mainApplication.setCurrentPictureId(null);
+            mainApplication.setPictureSequenceMode(false);
+        }
     }
 
     static void CloseAllWindows(Context mContext) {
-        HashMap<String, View> hashMap = ((MainApplication) mContext.getApplicationContext()).getRegister();
-        WindowManager windowManager = getWindowManager(mContext);
-        PictureData pictureData = new PictureData();
-        if (hashMap.size() > 0) {
-            for (HashMap.Entry<?, ?> entry : hashMap.entrySet()) {
-                pictureData.setDataControl(entry.getKey().toString());
-                if (pictureData.getBoolean(Config.DATA_PICTURE_SHOW_ENABLED, Config.DATA_DEFAULT_PICTURE_SHOW_ENABLED)) {
-                    FloatImageView floatImageView = (FloatImageView) entry.getValue();
-                    windowManager.removeView(floatImageView);
-                    floatImageView.refreshDrawableState();
-                }
-            }
-        }
+        hideAllWindowsRuntime(mContext);
     }
 
     public static void updateAllWindowsMovability(Context mContext, boolean global_touchable) {
@@ -118,6 +129,107 @@ public class ManageMethods {
         context.sendBroadcast(new Intent().setAction(Config.INTENT_ACTION_NOTIFICATION_UPDATE_COUNT));
     }
 
+    public static boolean switchPicture(Context context, int direction) {
+        PictureData pictureData = new PictureData();
+        LinkedHashMap<String, String> pictures = pictureData.getListArray();
+        if (pictures.isEmpty()) {
+            return false;
+        }
+
+        List<String> pictureIds = new ArrayList<>(pictures.keySet());
+        MainApplication mainApplication = (MainApplication) context.getApplicationContext();
+        int currentIndex = pictureIds.indexOf(mainApplication.getCurrentPictureId());
+        int targetIndex;
+        if (currentIndex < 0) {
+            targetIndex = direction < 0 ? pictureIds.size() - 1 : 0;
+        } else {
+            int step = direction < 0 ? -1 : 1;
+            targetIndex = Math.floorMod(currentIndex + step, pictureIds.size());
+        }
+
+        String targetPictureId = pictureIds.get(targetIndex);
+        hideAllWindowsRuntime(context);
+        if (!showWindowById(context, targetPictureId)) {
+            return false;
+        }
+        pictureData.setExclusivePictureVisible(targetPictureId);
+        mainApplication.setCurrentPictureId(targetPictureId);
+        mainApplication.setPictureSequenceMode(true);
+        mainApplication.setWinVisible(true);
+        return true;
+    }
+
+    public static boolean showFirstPicture(Context context) {
+        PictureData pictureData = new PictureData();
+        LinkedHashMap<String, String> pictures = pictureData.getListArray();
+        if (pictures.isEmpty()) {
+            ((MainApplication) context.getApplicationContext()).setWinVisible(false);
+            return false;
+        }
+
+        String firstPictureId = pictures.keySet().iterator().next();
+        hideAllWindowsRuntime(context);
+        if (!showWindowById(context, firstPictureId)) {
+            return false;
+        }
+        pictureData.setExclusivePictureVisible(firstPictureId);
+        MainApplication mainApplication = (MainApplication) context.getApplicationContext();
+        mainApplication.setCurrentPictureId(firstPictureId);
+        mainApplication.setPictureSequenceMode(true);
+        mainApplication.setWinVisible(true);
+        return true;
+    }
+
+    public static void prepareWindowForEditing(Context context, String pictureId) {
+        MainApplication mainApplication = (MainApplication) context.getApplicationContext();
+        if (showWindowById(context, pictureId)) {
+            mainApplication.setWinVisible(true);
+        }
+    }
+
+    public static void finishWindowEditing(Context context, String pictureId, boolean originallyVisible) {
+        if (originallyVisible) {
+            showWindowById(context, pictureId);
+        } else {
+            hideWindowById(context, pictureId);
+        }
+        ((MainApplication) context.getApplicationContext()).setWinVisible(hasAttachedWindow(context));
+    }
+
+    public static void setSequenceWindowVisible(Context context, boolean visible) {
+        MainApplication mainApplication = (MainApplication) context.getApplicationContext();
+        if (visible) {
+            String currentPictureId = mainApplication.getCurrentPictureId();
+            if (currentPictureId != null) {
+                showWindowById(context, currentPictureId);
+                PictureData pictureData = new PictureData();
+                pictureData.setDataControl(currentPictureId);
+                pictureData.put(Config.DATA_PICTURE_SHOW_ENABLED, true);
+                pictureData.commit(null);
+            }
+        } else {
+            hideAllWindowsRuntime(context);
+            String currentPictureId = mainApplication.getCurrentPictureId();
+            if (currentPictureId != null) {
+                PictureData pictureData = new PictureData();
+                pictureData.setDataControl(currentPictureId);
+                pictureData.put(Config.DATA_PICTURE_SHOW_ENABLED, false);
+                pictureData.commit(null);
+            }
+        }
+        mainApplication.setWinVisible(visible);
+    }
+
+    public static void hideAllWindowsRuntime(Context context) {
+        HashMap<String, View> registeredViews = ((MainApplication) context.getApplicationContext()).getRegister();
+        WindowManager windowManager = getWindowManager(context);
+        for (View view : registeredViews.values()) {
+            if (view instanceof FloatImageView) {
+                removeWindowIfAttached(windowManager, (FloatImageView) view);
+            }
+        }
+    }
+
     public static void setAllWindowsVisible(Context context, boolean visible) {
         String id;
         PictureData pictureData = new PictureData();
@@ -130,29 +242,37 @@ public class ManageMethods {
 
     public static void setWindowVisible(Context context, PictureData pictureData, String id, boolean visible) {
         pictureData.setDataControl(id);
-        boolean data_visible = pictureData.getBoolean(Config.DATA_PICTURE_SHOW_ENABLED, visible);
         if (visible) {
-            if (!data_visible) {
-                showWindowById(context, id);
-                pictureData.put(Config.DATA_PICTURE_SHOW_ENABLED, true);
-                pictureData.commit(null);
-            }
+            showWindowById(context, id);
         } else {
-            if (data_visible) {
-                hideWindowById(context, id);
-                pictureData.put(Config.DATA_PICTURE_SHOW_ENABLED, false);
-                pictureData.commit(null);
-            }
+            hideWindowById(context, id);
         }
+        pictureData.put(Config.DATA_PICTURE_SHOW_ENABLED, visible);
+        pictureData.commit(null);
+
+        MainApplication mainApplication = (MainApplication) context.getApplicationContext();
+        mainApplication.setPictureSequenceMode(false);
+        if (visible) {
+            mainApplication.setCurrentPictureId(id);
+        }
+        mainApplication.setWinVisible(hasAttachedWindow(context));
     }
 
     private static void hideWindowById(Context mContext, String id) {
         FloatImageView floatImageView = ImageMethods.getFloatImageViewById(mContext, id);
-        getWindowManager(mContext).removeView(floatImageView);
+        if (floatImageView != null) {
+            removeWindowIfAttached(getWindowManager(mContext), floatImageView);
+        }
     }
 
-    private static void showWindowById(Context mContext, String id) {
+    private static boolean showWindowById(Context mContext, String id) {
         FloatImageView floatImageView = ImageMethods.getFloatImageViewById(mContext, id);
+        if (floatImageView == null) {
+            return false;
+        }
+        if (floatImageView.isAttachedToWindow()) {
+            return true;
+        }
         PictureData pictureData = new PictureData();
         pictureData.setDataControl(id);
         int positionX = pictureData.getInt(Config.DATA_PICTURE_POSITION_X, Config.DATA_DEFAULT_PICTURE_POSITION_X);
@@ -163,6 +283,26 @@ public class ManageMethods {
         WindowManager.LayoutParams layoutParams = WindowsMethods.getDefaultLayout(mContext, positionX, positionY, touch_and_move || global_touchable, over_layout);
         getWindowManager(mContext).addView(floatImageView, layoutParams);
         floatImageView.setMoveable(touch_and_move || global_touchable);
+        return true;
+    }
+
+    private static void removeWindowIfAttached(WindowManager windowManager, FloatImageView floatImageView) {
+        if (floatImageView.isAttachedToWindow()) {
+            try {
+                windowManager.removeView(floatImageView);
+            } catch (IllegalArgumentException ignored) {
+                // The window may already have been removed by a concurrent lifecycle callback.
+            }
+        }
+    }
+
+    private static boolean hasAttachedWindow(Context context) {
+        for (View view : ((MainApplication) context.getApplicationContext()).getRegister().values()) {
+            if (view instanceof FloatImageView && view.isAttachedToWindow()) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

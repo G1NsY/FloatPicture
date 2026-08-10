@@ -12,12 +12,15 @@ public class Config {
     public final static int REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_ADD = 3;
     public final static int REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_GET_PICTURE = 4;
     public final static int REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_CHANGE = 5;
+    public final static int REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_REPLACE = 6;
 
     public final static String INTENT_PICTURE_EDIT_POSITION = "EDIT_POSITION";
     public final static String INTENT_PICTURE_EDIT_ID = "EDIT_ID";
     public final static String INTENT_PICTURE_EDIT_MODE = "EDIT_MODE";
 
     public final static String INTENT_ACTION_NOTIFICATION_BUTTON_CLICK = "ACTION_NOTIFICATION_BUTTON_CLICK";
+    public final static String INTENT_ACTION_NOTIFICATION_PREVIOUS = "ACTION_NOTIFICATION_PREVIOUS";
+    public final static String INTENT_ACTION_NOTIFICATION_NEXT = "ACTION_NOTIFICATION_NEXT";
     public final static String INTENT_ACTION_NOTIFICATION_UPDATE_COUNT = "ACTION_NOTIFICATION_UPDATE_COUNT";
 
     public final static String DATA_PICTURE_SHOW_ENABLED = "SHOW_ENABLED";
@@ -41,6 +44,8 @@ public class Config {
     public final static boolean DATA_DEFAULT_ALLOW_PICTURE_OVER_LAYOUT = false;
 
     public final static String PREFERENCE_PICTURE_NAME = "settings_picture_name";
+    public final static String PREFERENCE_PICTURE_REPLACE = "settings_picture_replace";
+    public final static String PREFERENCE_PICTURE_OUTLINE = "settings_picture_outline";
     public final static String PREFERENCE_ALLOW_PICTURE_OVER_LAYOUT = "settings_allow_picture_over_layout";
     public final static String PREFERENCE_PICTURE_RESIZE = "settings_picture_resize";
     public final static String PREFERENCE_PICTURE_ALPHA = "settings_picture_alpha";
@@ -48,7 +53,6 @@ public class Config {
     public final static String PREFERENCE_PICTURE_DEGREE = "settings_picture_degree";
     public final static String PREFERENCE_PICTURE_TOUCH_AND_MOVE = "settings_picture_touchable_and_moveable";
 
-    public final static String PREFERENCE_BOOT_AUTO_RUN = "boot_auto_run";
     public final static String PREFERENCE_SHOW_NOTIFICATION_CONTROL = "show_notification_control";
     public final static String PREFERENCE_NEW_PICTURE_QUALITY = "new_picture_quality";
     public final static String PREFERENCE_TOUCHABLE_POSITION_EDIT = "touchable_position_edit";

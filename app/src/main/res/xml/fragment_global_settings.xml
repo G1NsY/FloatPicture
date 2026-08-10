@@ -5,12 +5,6 @@
         app:iconSpaceReserved="false"
         app:title="@string/settings_general">
         <CheckBoxPreference
-            app:defaultValue="false"
-            app:iconSpaceReserved="false"
-            app:key="boot_auto_run"
-            app:summary="@string/settings_global_start_on_boot_sum"
-            app:title="@string/settings_global_start_on_boot" />
-        <CheckBoxPreference
             app:defaultValue="true"
             app:iconSpaceReserved="false"
             app:key="show_notification_control"

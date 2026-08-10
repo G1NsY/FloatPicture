@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">悬浮图片</string>
     <string name="adapter_image_description">图片预览</string>
+    <string name="drag_to_reorder">长按并拖动以调整图片顺序</string>
     <string name="done">确认</string>
     <string name="cancel">取消</string>
     <string name="add">添加</string>
@@ -17,6 +18,16 @@
     <string name="settings_picture_name">图片名称</string>
     <string name="settings_picture_name_sum">使用不同的名称区分图片</string>
     <string name="settings_picture_name_warn">请输入一个正确的图片名称</string>
+    <string name="settings_picture_replace">替换图片</string>
+    <string name="settings_picture_replace_sum">选择新图片并保留当前的位置、缩放、旋转和透明度</string>
+    <string name="settings_picture_outline">提取红色轮廓</string>
+    <string name="settings_picture_outline_sum">将照片转换为红线、18% 灰底的轮廓图片</string>
+    <string name="settings_picture_outline_detail">线条范围：%1$d</string>
+    <string name="settings_picture_outline_contrast">线条对比：%1$d</string>
+    <string name="settings_picture_outline_hint">模拟去色、反相颜色减淡、最小值、色阶和去白底。数值调整后会自动刷新预览。</string>
+    <string name="settings_picture_outline_apply">应用到图片</string>
+    <string name="settings_picture_outline_success">红色轮廓已应用</string>
+    <string name="settings_picture_outline_failed">轮廓生成失败，请尝试较小的图片</string>
     <string name="settings_picture_position">设置窗口位置</string>
     <string name="settings_picture_position_sum">移动窗口</string>
     <string name="settings_picture_position_warn">请输入一个正确的窗口位置！</string>
@@ -30,6 +41,9 @@
     <string name="action_warn_edit_hided_window">你不能编辑一个已经隐藏的窗口！</string>
     <string name="action_delete_window">成功删除窗口！</string>
     <string name="action_add_window">成功添加窗口！</string>
+    <string name="action_picture_order_saved">图片顺序已保存</string>
+    <string name="action_replace_picture_success">图片已替换，原有参数已保留</string>
+    <string name="action_replace_picture_failed">替换图片失败</string>
     <string name="new_picture_name">新图片</string>
     <string name="settings_global_label">全局设置</string>
     <string name="action_back_to_launcher">返回桌面</string>
@@ -38,8 +52,6 @@
     <string name="open">开启</string>
     <string name="exit_application">退出</string>
     <string name="back_to_launcher">仅返回桌面</string>
-    <string name="settings_global_start_on_boot">开机自启动</string>
-    <string name="settings_global_start_on_boot_sum">开机时自动运行应用</string>
     <string name="application_version">版本：</string>
     <string name="about">关于</string>
     <string name="author">XFY9326(逸雪飞扬)</string>
@@ -70,7 +82,10 @@
     <string name="settings_global_advanced_touchable_position_edit_sum">可以用手指移动图片设置位置</string>
     <string name="save_moved_position">保存移动后位置</string>
     <string name="notification_picture_count">共%1$s个图片悬浮窗</string>
+    <string name="notification_picture_position">%1$d / %2$d · %3$s</string>
     <string name="imageview_notification_visible">设定所有图片是否可见</string>
+    <string name="imageview_notification_previous">切换到上一张图片</string>
+    <string name="imageview_notification_next">切换到下一张图片</string>
     <string name="settings_picture_touchable_and_moveable">触摸并移动窗口</string>
     <string name="settings_picture_touchable_and_moveable_sum">打开这个功能就可以随意拖动图片。请谨慎使用！</string>
     <string name="settings_picture_touchable_and_moveable_warn">请确保这个图片窗口不是过大并且你依然可以控制并且关闭它！\n\n编辑模式下移动到的位置将会是该窗口的默认出现位置。</string>

@@ -41,8 +41,8 @@ public class WindowsMethods {
         layoutParams.x = layoutPositionX;
         layoutParams.y = layoutPositionY;
         layoutParams.gravity = Gravity.START | Gravity.TOP;
-        // 【新增】：强制悬浮窗忽略 Activity 的方向建议，完全由我们的逻辑控制
-        layoutParams.screenOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+        // 锁定悬浮窗创建时的显示方向，避免相机等前台应用带动悬浮图片旋转。
+        layoutParams.screenOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LOCKED;
         layoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
         layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
         layoutParams.format = PixelFormat.TRANSLUCENT;

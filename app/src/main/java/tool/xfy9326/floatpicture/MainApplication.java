@@ -16,6 +16,8 @@ public class MainApplication extends Application {
     private ManageListAdapter manageListAdapter;
     private boolean ApplicationInit;
     private boolean winVisible = true;
+    private boolean pictureSequenceMode = false;
+    private String currentPictureId;
     private float safeWindowsAlpha = 0.8f;
 
     @Override
@@ -41,6 +43,22 @@ public class MainApplication extends Application {
 
     public void setWinVisible(boolean visible) {
         winVisible = visible;
+    }
+
+    public boolean isPictureSequenceMode() {
+        return pictureSequenceMode;
+    }
+
+    public void setPictureSequenceMode(boolean pictureSequenceMode) {
+        this.pictureSequenceMode = pictureSequenceMode;
+    }
+
+    public String getCurrentPictureId() {
+        return currentPictureId;
+    }
+
+    public void setCurrentPictureId(String currentPictureId) {
+        this.currentPictureId = currentPictureId;
     }
 
     public ManageListAdapter getManageListAdapter() {

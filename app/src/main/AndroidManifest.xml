@@ -2,7 +2,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="tool.xfy9326.floatpicture">
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -25,7 +24,7 @@
             android:name=".Activities.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:theme="@style/DrawerActivity"
+            android:theme="@style/DrawerActivity.Starting"
             tools:ignore="InnerclassSeparator">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -73,15 +72,6 @@
         <service
             android:name=".Services.NotificationService"
             tools:ignore="InnerclassSeparator" />
-
-        <receiver
-            android:name=".Receiver.BootCompleteReceiver"
-            android:exported="true"
-            tools:ignore="InnerclassSeparator">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
 
     </application>
 

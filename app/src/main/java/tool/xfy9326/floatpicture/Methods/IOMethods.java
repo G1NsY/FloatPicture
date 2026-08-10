@@ -33,6 +33,96 @@ public class IOMethods {
         }
     }
 
+    static boolean replaceImageByUri(Context context, Uri uri, int quality, String targetPath) {
+        Bitmap replacement = readImageByUri(context, uri);
+        if (replacement == null) {
+            return false;
+        }
+
+        File target = new File(targetPath);
+        File temporary = new File(targetPath + ".replacement");
+        File backup = new File(targetPath + ".backup");
+        if ((temporary.exists() && !temporary.delete()) || (backup.exists() && !backup.delete())) {
+            replacement.recycle();
+            return false;
+        }
+
+        saveBitmap(replacement, quality, temporary.getAbsolutePath());
+        if (!temporary.isFile() || temporary.length() == 0) {
+            //noinspection ResultOfMethodCallIgnored
+            temporary.delete();
+            return false;
+        }
+
+        boolean hadOriginal = target.isFile();
+        if (hadOriginal && !target.renameTo(backup)) {
+            //noinspection ResultOfMethodCallIgnored
+            temporary.delete();
+            return false;
+        }
+
+        if (!temporary.renameTo(target)) {
+            if (hadOriginal) {
+                //noinspection ResultOfMethodCallIgnored
+                backup.renameTo(target);
+            }
+            //noinspection ResultOfMethodCallIgnored
+            temporary.delete();
+            return false;
+        }
+
+        if (backup.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            backup.delete();
+        }
+        return true;
+    }
+
+    public static boolean replaceBitmap(Bitmap replacement, int quality, String targetPath) {
+        if (replacement == null || replacement.isRecycled()) return false;
+
+        File target = new File(targetPath);
+        File temporary = new File(targetPath + ".replacement");
+        File backup = new File(targetPath + ".backup");
+        try {
+            if ((temporary.exists() && !temporary.delete())
+                    || (backup.exists() && !backup.delete())) {
+                return false;
+            }
+            if (!createPath(temporary) && temporary.getParentFile() != null
+                    && !temporary.getParentFile().isDirectory()) {
+                return false;
+            }
+            try (OutputStream outputStream = new FileOutputStream(temporary)) {
+                if (!replacement.compress(Bitmap.CompressFormat.WEBP, quality, outputStream)) {
+                    return false;
+                }
+                outputStream.flush();
+            }
+            if (!temporary.isFile() || temporary.length() == 0) return false;
+
+            boolean hadOriginal = target.isFile();
+            if (hadOriginal && !target.renameTo(backup)) return false;
+            if (!temporary.renameTo(target)) {
+                if (hadOriginal) {
+                    //noinspection ResultOfMethodCallIgnored
+                    backup.renameTo(target);
+                }
+                return false;
+            }
+            if (backup.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                backup.delete();
+            }
+            return true;
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            //noinspection ResultOfMethodCallIgnored
+            temporary.delete();
+            return false;
+        }
+    }
+
     @SuppressWarnings("SameParameterValue")
 //    static void saveBitmap(Bitmap bitmap, int quality, String path) {
 //        File file = new File(path);
