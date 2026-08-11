@@ -23,7 +23,11 @@ import tool.xfy9326.floatpicture.View.FloatImageView;
 
 public class ImageMethods {
 
-    private static final int OUTLINE_RED = 0xFFEB2020;
+    public static final int OUTLINE_RED = 0xFFEB2020;
+    public static final int OUTLINE_GREEN = 0xFF20B85A;
+    public static final int OUTLINE_BLUE = 0xFF2080EB;
+    public static final int OUTLINE_BLACK = 0xFF111111;
+    public static final int OUTLINE_WHITE = 0xFFFFFFFF;
     private static final int EIGHTEEN_PERCENT_GRAY = 0xFF777777;
 
     public static String getImageDisplayName(Context context, Uri uri) {
@@ -82,11 +86,13 @@ public class ImageMethods {
         }
         int quality = PreferenceManager.getDefaultSharedPreferences(activity)
                 .getInt(Config.PREFERENCE_NEW_PICTURE_QUALITY, 80);
-        return IOMethods.replaceImageByUri(
+        boolean replaced = IOMethods.replaceImageByUri(
                 activity,
                 uri,
                 quality,
                 Config.DEFAULT_PICTURE_DIR + pictureId);
+        if (replaced) clearOutlineSource(pictureId);
+        return replaced;
     }
 
     public static Bitmap getShowBitmap(Context context, String pictureId) {
@@ -102,10 +108,61 @@ public class ImageMethods {
         return getShowBitmap(context, pictureId);
     }
 
+    public static Bitmap getOutlineSourceBitmap(String pictureId) {
+        File sourceFile = new File(getOutlineSourcePath(pictureId));
+        if (!sourceFile.isFile()) return null;
+        return BitmapFactory.decodeFile(sourceFile.getAbsolutePath());
+    }
+
+    public static boolean ensureOutlineSource(Bitmap source, String pictureId) {
+        File sourceFile = new File(getOutlineSourcePath(pictureId));
+        if (sourceFile.isFile() && sourceFile.length() > 0) return true;
+        return IOMethods.replaceBitmap(source, 100, sourceFile.getAbsolutePath());
+    }
+
+    public static void clearOutlineSource(String pictureId) {
+        deleteIfPresent(new File(getOutlineSourcePath(pictureId)));
+        deleteIfPresent(new File(getOutlineSourcePath(pictureId) + ".replacement"));
+        deleteIfPresent(new File(getOutlineSourcePath(pictureId) + ".backup"));
+    }
+
+    private static String getOutlineSourcePath(String pictureId) {
+        return Config.DEFAULT_PICTURE_DIR + pictureId + Config.PICTURE_OUTLINE_SOURCE_SUFFIX;
+    }
+
     public static boolean isPictureFileExist(String pictureId) {
         String path = Config.DEFAULT_PICTURE_DIR + pictureId;
         File file = new File(path);
         return file.exists();
+    }
+
+    public static String copyPictureFiles(String pictureId) {
+        if (pictureId == null || pictureId.isEmpty()) return null;
+
+        File sourcePicture = new File(Config.DEFAULT_PICTURE_DIR + pictureId);
+        if (!sourcePicture.isFile()) return null;
+
+        long timestamp = System.currentTimeMillis();
+        String copyId = pictureId + "_copy_" + timestamp;
+        int collision = 1;
+        while (new File(Config.DEFAULT_PICTURE_DIR + copyId).exists()) {
+            copyId = pictureId + "_copy_" + timestamp + "_" + collision++;
+        }
+
+        File targetPicture = new File(Config.DEFAULT_PICTURE_DIR + copyId);
+        if (!IOMethods.copyFile(sourcePicture.getAbsolutePath(), targetPicture.getAbsolutePath())) {
+            return null;
+        }
+
+        File sourceOutline = new File(getOutlineSourcePath(pictureId));
+        if (sourceOutline.isFile()) {
+            File targetOutline = new File(getOutlineSourcePath(copyId));
+            if (!IOMethods.copyFile(sourceOutline.getAbsolutePath(), targetOutline.getAbsolutePath())) {
+                deleteIfPresent(targetPicture);
+                return null;
+            }
+        }
+        return copyId;
     }
 
     public static Bitmap getEditBitmap(Context context, Bitmap bitmap) {
@@ -117,7 +174,13 @@ public class ImageMethods {
      * Reproduces the common Photoshop pencil-outline workflow: grayscale, inverted
      * color dodge, Minimum, Levels, white removal, red ink and an 18% gray base.
      */
-    public static Bitmap createRedOutline(Bitmap source, int minimumRadius, int contrast) {
+    public static Bitmap createOutline(Bitmap source, int minimumRadius, int contrast,
+                                       int outlineColor) {
+        return createOutline(source, minimumRadius, contrast, outlineColor, true);
+    }
+
+    public static Bitmap createOutline(Bitmap source, int minimumRadius, int contrast,
+                                       int outlineColor, boolean keepGrayBackground) {
         if (source == null || source.isRecycled()) return null;
 
         int width = source.getWidth();
@@ -149,9 +212,9 @@ public class ImageMethods {
 
             float gain = 1f + strength / 35f;
             int noiseFloor = 1 + strength / 25;
-            int redR = (OUTLINE_RED >> 16) & 0xFF;
-            int redG = (OUTLINE_RED >> 8) & 0xFF;
-            int redB = OUTLINE_RED & 0xFF;
+            int outlineR = (outlineColor >> 16) & 0xFF;
+            int outlineG = (outlineColor >> 8) & 0xFF;
+            int outlineB = outlineColor & 0xFF;
             int grayBase = EIGHTEEN_PERCENT_GRAY & 0xFF;
 
             for (int i = 0; i < count; i++) {
@@ -163,11 +226,15 @@ public class ImageMethods {
                         : Math.min(255, (base * 255) / denominator);
                 int ink = Math.max(0, Math.min(255,
                         Math.round(((255 - dodge) - noiseFloor) * gain)));
-                int inverseInk = 255 - ink;
-                int r = (redR * ink + grayBase * inverseInk + 127) / 255;
-                int g = (redG * ink + grayBase * inverseInk + 127) / 255;
-                int b = (redB * ink + grayBase * inverseInk + 127) / 255;
-                pixels[i] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                if (keepGrayBackground) {
+                    int inverseInk = 255 - ink;
+                    int r = (outlineR * ink + grayBase * inverseInk + 127) / 255;
+                    int g = (outlineG * ink + grayBase * inverseInk + 127) / 255;
+                    int b = (outlineB * ink + grayBase * inverseInk + 127) / 255;
+                    pixels[i] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                } else {
+                    pixels[i] = (ink << 24) | (outlineColor & 0x00FFFFFF);
+                }
             }
 
             Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -176,6 +243,10 @@ public class ImageMethods {
         } catch (OutOfMemoryError error) {
             return null;
         }
+    }
+
+    public static Bitmap createRedOutline(Bitmap source, int minimumRadius, int contrast) {
+        return createOutline(source, minimumRadius, contrast, OUTLINE_RED);
     }
 
     private static void minimumHorizontal(byte[] source, byte[] target,
@@ -259,7 +330,7 @@ public class ImageMethods {
 
     public static FloatImageView createPictureView(Context context, Bitmap bitmap, boolean touch_and_move, boolean allow_picture_over_layout, float zoom_x, float zoom_y, float degree) {
         FloatImageView view = new FloatImageView(context);
-        view.setImageBitmap(resizeBitmap(bitmap, zoom_x, zoom_y, degree));
+        view.configureGestureImage(bitmap, zoom_x, zoom_y, degree);
         view.setMoveable(touch_and_move);
         view.setOverLayout(allow_picture_over_layout);
         return view;
@@ -272,16 +343,30 @@ public class ImageMethods {
 
     public static Bitmap resizeBitmap(Bitmap bitmap, float zoom_x, float zoom_y, float degree) {
         if (bitmap == null) return null;
-        int width = bitmap.getWidth();
-        int height = bitmap.getHeight();
-        Matrix matrix = new Matrix();
-        if (zoom_x != 0 && zoom_y != 0) {
-            matrix.postScale(zoom_x, zoom_y);
+        int scaledWidth = Math.max(1, Math.round(bitmap.getWidth() * Math.abs(zoom_x)));
+        int scaledHeight = Math.max(1, Math.round(bitmap.getHeight() * Math.abs(zoom_y)));
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(
+                bitmap, scaledWidth, scaledHeight, true);
+
+        float normalizedDegree = degree == -1 ? 0f : degree % 360f;
+        if (Math.abs(normalizedDegree) < 0.0001f) {
+            return scaledBitmap;
         }
-        if (degree != -1) {
-            matrix.postRotate(degree);
+
+        Matrix rotationMatrix = new Matrix();
+        rotationMatrix.setRotate(normalizedDegree);
+        Bitmap rotatedBitmap = Bitmap.createBitmap(
+                scaledBitmap,
+                0,
+                0,
+                scaledBitmap.getWidth(),
+                scaledBitmap.getHeight(),
+                rotationMatrix,
+                true);
+        if (scaledBitmap != bitmap && scaledBitmap != rotatedBitmap) {
+            scaledBitmap.recycle();
         }
-        return Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+        return rotatedBitmap;
     }
 
     // Backward compatibility
@@ -291,8 +376,15 @@ public class ImageMethods {
 
     public static void clearAllTemp(Context context, String id) {
         String path = Config.DEFAULT_PICTURE_DIR + id;
-        File file = new File(path);
+        deleteIfPresent(new File(path));
+        deleteIfPresent(new File(path + ".replacement"));
+        deleteIfPresent(new File(path + ".backup"));
+        clearOutlineSource(id);
+    }
+
+    private static void deleteIfPresent(File file) {
         if (file.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             file.delete();
         }
     }

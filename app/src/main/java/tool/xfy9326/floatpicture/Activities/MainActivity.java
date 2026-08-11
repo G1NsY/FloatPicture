@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onDrawerOpened(@NonNull android.view.View drawerView) {
-                ManageMethods.updateAllWindowsMovability(MainActivity.this, false);
+                ManageMethods.updateAllWindowsGestureState(MainActivity.this, false);
             }
 
             @Override
@@ -102,8 +102,7 @@ public class MainActivity extends AppCompatActivity {
                 if (navigateToGlobalSettings) {
                     navigateToGlobalSettings = false;
                 } else {
-                    boolean global_touchable = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).getBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
-                    ManageMethods.updateAllWindowsMovability(MainActivity.this, global_touchable);
+                    ManageMethods.updateAllWindowsGestureState(MainActivity.this, true);
                 }
             }
 
@@ -171,27 +170,34 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_ADD) {
-            manageListAdapter.updateData();
-            if (manageListAdapter.getItemCount() != 0) {
-                if (manageListAdapter.getItemCount() == 1) {
+            if (resultCode == RESULT_OK) {
+                int previousCount = manageListAdapter.getItemCount();
+                manageListAdapter.updateData();
+                if (previousCount == 0) {
                     manageListAdapter.notifyDataSetChanged();
                 } else {
-                    manageListAdapter.notifyItemInserted(manageListAdapter.getItemCount());
+                    manageListAdapter.notifyItemInserted(
+                            manageListAdapter.getItemCount() - 1);
                 }
                 SnackShow(this, R.string.action_add_window);
                 ManageMethods.updateNotificationCount(this);
             }
         } else if (requestCode == Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_CHANGE) {
-            if (data != null) {
-                int position = data.getIntExtra(Config.INTENT_PICTURE_EDIT_POSITION, -1);
-                if (position >= 0) {
-                    manageListAdapter.updateData();
+            if (resultCode == RESULT_OK) {
+                int previousCount = manageListAdapter.getItemCount();
+                int position = data == null
+                        ? -1
+                        : data.getIntExtra(Config.INTENT_PICTURE_EDIT_POSITION, -1);
+                manageListAdapter.updateData();
+                if (position >= 0 && previousCount == manageListAdapter.getItemCount()) {
                     manageListAdapter.notifyItemChanged(position);
-                    ManageMethods.updateNotificationCount(this);
+                } else {
+                    manageListAdapter.notifyDataSetChanged();
                 }
+                ManageMethods.updateNotificationCount(this);
             }
         } else if (requestCode == Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_GET_PICTURE) {
-            if (data != null) {
+            if (resultCode == RESULT_OK && data != null) {
                 Intent intent = new Intent(MainActivity.this, PictureSettingsActivity.class);
                 intent.putExtra(Config.INTENT_PICTURE_EDIT_MODE, false);
                 intent.setData(data.getData());

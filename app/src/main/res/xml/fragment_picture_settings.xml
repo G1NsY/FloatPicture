@@ -18,6 +18,12 @@
             app:singleLine="true"
             app:summary="@string/settings_picture_replace_sum"
             app:title="@string/settings_picture_replace" />
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="settings_picture_outline"
+            app:singleLine="true"
+            app:summary="@string/settings_picture_outline_sum"
+            app:title="@string/settings_picture_outline" />
     </PreferenceCategory>
     <PreferenceCategory
         app:iconSpaceReserved="false"
@@ -30,11 +36,12 @@
             app:summary="@string/settings_picture_resize_sum"
             app:title="@string/settings_picture_resize" />
         <Preference
+            android:selectAllOnFocus="true"
             app:iconSpaceReserved="false"
-            app:key="settings_picture_outline"
+            app:key="settings_picture_position"
             app:singleLine="true"
-            app:summary="@string/settings_picture_outline_sum"
-            app:title="@string/settings_picture_outline" />
+            app:summary="@string/settings_picture_position_sum"
+            app:title="@string/settings_picture_position" />
         <Preference
             android:selectAllOnFocus="true"
             app:iconSpaceReserved="false"
@@ -52,29 +59,13 @@
     </PreferenceCategory>
     <PreferenceCategory
         app:iconSpaceReserved="false"
-        app:title="@string/settings_window">
+        app:key="settings_picture_copy_category"
+        app:title="@string/settings_picture_copy_category">
         <Preference
-            android:selectAllOnFocus="true"
-            app:dependency="settings_picture_touchable_and_moveable"
             app:iconSpaceReserved="false"
-            app:key="settings_picture_position"
+            app:key="settings_picture_save_as_copy"
             app:singleLine="true"
-            app:summary="@string/settings_picture_position_sum"
-            app:title="@string/settings_picture_position" />
-        <CheckBoxPreference
-            android:selectAllOnFocus="true"
-            app:disableDependentsState="true"
-            app:iconSpaceReserved="false"
-            app:key="settings_picture_touchable_and_moveable"
-            app:singleLine="true"
-            app:summary="@string/settings_picture_touchable_and_moveable_sum"
-            app:title="@string/settings_picture_touchable_and_moveable" />
-        <CheckBoxPreference
-            android:selectAllOnFocus="true"
-            app:iconSpaceReserved="false"
-            app:key="settings_allow_picture_over_layout"
-            app:singleLine="true"
-            app:summary="@string/settings_allow_picture_over_layout_sum"
-            app:title="@string/settings_allow_picture_over_layout" />
+            app:summary="@string/settings_picture_save_as_copy_sum"
+            app:title="@string/settings_picture_save_as_copy" />
     </PreferenceCategory>
 </PreferenceScreen>

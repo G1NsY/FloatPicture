@@ -12,7 +12,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.IBinder;
+import android.view.View;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -70,6 +72,7 @@ public class NotificationService extends Service {
             intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK);
             intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_PREVIOUS);
             intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_NEXT);
+            intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_SAVE_GESTURE);
             intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_UPDATE_COUNT);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 registerReceiver(notificationButtonBroadcastReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED);
@@ -119,7 +122,6 @@ public class NotificationService extends Service {
 
     private NotificationCompat.Builder createNotification() {
         MainApplication mainApplication = (MainApplication) getApplicationContext();
-        mainApplication.setWinVisible(true);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
@@ -141,7 +143,11 @@ public class NotificationService extends Service {
         PendingIntent pendingIntent_previous = PendingIntent.getBroadcast(this, 1, intent_previous, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         remoteViews.setOnClickPendingIntent(R.id.imageview_previous_picture, pendingIntent_previous);
 
-        remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
+        remoteViews.setImageViewResource(
+                R.id.imageview_set_picture_view,
+                ManageMethods.isCurrentPictureVisible(this)
+                        ? R.drawable.ic_invisible
+                        : R.drawable.ic_visible);
         Intent intent_picture_show = new Intent(Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK).setPackage(getPackageName());
         PendingIntent pendingIntent_picture_show = PendingIntent.getBroadcast(this, 2, intent_picture_show, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         remoteViews.setOnClickPendingIntent(R.id.imageview_set_picture_view, pendingIntent_picture_show);
@@ -150,6 +156,17 @@ public class NotificationService extends Service {
         Intent intent_next = new Intent(Config.INTENT_ACTION_NOTIFICATION_NEXT).setPackage(getPackageName());
         PendingIntent pendingIntent_next = PendingIntent.getBroadcast(this, 3, intent_next, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         remoteViews.setOnClickPendingIntent(R.id.imageview_next_picture, pendingIntent_next);
+
+        remoteViews.setImageViewResource(
+                R.id.imageview_save_gesture, android.R.drawable.ic_menu_save);
+        Intent intent_save_gesture = new Intent(
+                Config.INTENT_ACTION_NOTIFICATION_SAVE_GESTURE).setPackage(getPackageName());
+        PendingIntent pendingIntent_save_gesture = PendingIntent.getBroadcast(
+                this, 4, intent_save_gesture,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        remoteViews.setOnClickPendingIntent(
+                R.id.imageview_save_gesture, pendingIntent_save_gesture);
+        updateSaveGestureButtonVisibility();
 
         builder.setContent(remoteViews);
         return builder;
@@ -179,6 +196,14 @@ public class NotificationService extends Service {
                         pictures.get(currentPictureId)));
     }
 
+    private void updateSaveGestureButtonVisibility() {
+        boolean visible = androidx.preference.PreferenceManager
+                .getDefaultSharedPreferences(this)
+                .getBoolean(Config.PREFERENCE_SAVE_GESTURE_ADJUSTMENTS, false);
+        remoteViews.setViewVisibility(
+                R.id.imageview_save_gesture, visible ? View.VISIBLE : View.GONE);
+    }
+
     private class NotificationButtonBroadcastReceiver extends BroadcastReceiver {
         @SuppressLint("NotifyDataSetChanged")
         @Override
@@ -187,25 +212,9 @@ public class NotificationService extends Service {
                 MainApplication mainApplication = (MainApplication) getApplicationContext();
                 boolean refreshPictureList = false;
                 if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK)) {
-                    if (mainApplication.getWinVisible()) {
-                        if (mainApplication.isPictureSequenceMode()) {
-                            ManageMethods.setSequenceWindowVisible(context, false);
-                        } else {
-                            ManageMethods.setAllWindowsVisible(context, false);
-                        }
-                        remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_visible);
-                        mainApplication.setWinVisible(false);
-                    } else {
-                        if (mainApplication.isPictureSequenceMode()) {
-                            ManageMethods.setSequenceWindowVisible(context, true);
-                        } else {
-                            ManageMethods.showFirstPicture(context);
-                        }
-                        remoteViews.setImageViewResource(
-                                R.id.imageview_set_picture_view,
-                                mainApplication.getWinVisible() ? R.drawable.ic_invisible : R.drawable.ic_visible);
-                    }
-                    refreshPictureList = true;
+                    boolean showCurrentPicture = !ManageMethods.isCurrentPictureVisible(context);
+                    refreshPictureList = ManageMethods.setCurrentPictureVisible(
+                            context, showCurrentPicture);
                 } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_PREVIOUS)) {
                     if (ManageMethods.switchPicture(context, -1)) {
                         remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
@@ -216,6 +225,19 @@ public class NotificationService extends Service {
                         remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
                         refreshPictureList = true;
                     }
+                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_SAVE_GESTURE)) {
+                    boolean lockAfterSave = androidx.preference.PreferenceManager
+                            .getDefaultSharedPreferences(context)
+                            .getBoolean(Config.PREFERENCE_LOCK_GESTURES_AFTER_SAVE, false);
+                    boolean saved = ManageMethods.saveCurrentPictureGestureAdjustments(context);
+                    Toast.makeText(
+                            context,
+                            saved
+                                    ? (lockAfterSave
+                                    ? R.string.gesture_adjustments_saved_and_locked
+                                    : R.string.gesture_adjustments_saved)
+                                    : R.string.gesture_adjustments_save_failed,
+                            Toast.LENGTH_SHORT).show();
                 } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_UPDATE_COUNT)) {
                     // Status text is refreshed below after additions, deletions or reordering.
                 }
@@ -227,7 +249,10 @@ public class NotificationService extends Service {
                 }
                 remoteViews.setImageViewResource(
                         R.id.imageview_set_picture_view,
-                        mainApplication.getWinVisible() ? R.drawable.ic_invisible : R.drawable.ic_visible);
+                        ManageMethods.isCurrentPictureVisible(context)
+                                ? R.drawable.ic_invisible
+                                : R.drawable.ic_visible);
+                updateSaveGestureButtonVisibility();
                 updatePictureStatus(mainApplication);
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 builder_manage.setContent(remoteViews);

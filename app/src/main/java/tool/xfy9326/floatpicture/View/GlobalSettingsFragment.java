@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.preference.CheckBoxPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
@@ -64,6 +65,63 @@ public class GlobalSettingsFragment extends PreferenceFragmentCompat {
         requirePreference(Config.PREFERENCE_SHOW_NOTIFICATION_CONTROL).setOnPreferenceChangeListener((preference, newValue) -> {
             Toast.makeText(getActivity(), R.string.restart_to_apply_changes, Toast.LENGTH_SHORT).show();
             return true;
+        });
+
+        requirePreference(Config.PREFERENCE_ALLOW_MULTIPLE_FLOATING_PICTURES)
+                .setOnPreferenceChangeListener((preference, newValue) -> {
+                    if (!((Boolean) newValue)) {
+                        ManageMethods.enforceSingleVisiblePicture(requireContext());
+                    }
+                    return true;
+                });
+
+        requirePreference(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT)
+                .setOnPreferenceChangeListener((preference, newValue) -> {
+                    refreshGlobalDragWindowState();
+                    return true;
+                });
+
+        requirePreference(Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN)
+                .setOnPreferenceChangeListener((preference, newValue) -> {
+                    refreshGlobalDragWindowState();
+                    return true;
+                });
+
+        requirePreference(Config.PREFERENCE_PINCH_ROTATION)
+                .setOnPreferenceChangeListener((preference, newValue) -> {
+                    if ((Boolean) newValue) {
+                        sharedPreferences.edit()
+                                .putBoolean(Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN, true)
+                                .apply();
+                        CheckBoxPreference allowOverScreen = findPreference(
+                                Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN);
+                        if (allowOverScreen != null) {
+                            allowOverScreen.setChecked(true);
+                        }
+                    }
+                    refreshGlobalDragWindowState();
+                    return true;
+                });
+
+        requirePreference(Config.PREFERENCE_SAVE_GESTURE_ADJUSTMENTS)
+                .setOnPreferenceChangeListener((preference, newValue) -> {
+                    requireActivity().getWindow().getDecorView().post(() -> {
+                        if (isAdded()) {
+                            ManageMethods.updateNotificationCount(requireContext());
+                        }
+                    });
+                    return true;
+                });
+
+    }
+
+    private void refreshGlobalDragWindowState() {
+        requireActivity().getWindow().getDecorView().post(() -> {
+            if (isAdded()) {
+                // Keep overlays non-touchable while this settings screen is open,
+                // but immediately apply the latest over-screen boundary setting.
+                ManageMethods.updateAllWindowsGestureState(requireActivity(), false);
+            }
         });
     }
 
@@ -148,13 +206,12 @@ public class GlobalSettingsFragment extends PreferenceFragmentCompat {
     @Override
     public void onResume() {
         super.onResume();
-        ManageMethods.updateAllWindowsMovability(requireActivity(), false);
+        ManageMethods.updateAllWindowsGestureState(requireActivity(), false);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        boolean global_touchable = sharedPreferences.getBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
-        ManageMethods.updateAllWindowsMovability(requireActivity(), global_touchable);
+        ManageMethods.updateAllWindowsGestureState(requireActivity(), true);
     }
 }

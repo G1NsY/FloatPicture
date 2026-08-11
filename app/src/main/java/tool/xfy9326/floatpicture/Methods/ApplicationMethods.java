@@ -93,7 +93,12 @@ public class ApplicationMethods {
                         File[] pictures = dir.listFiles();
                         if (pictures != null) {
                             for (File pic_file : pictures) {
-                                if (!hashMap.containsKey(pic_file.getName())) {
+                                String fileName = pic_file.getName();
+                                String pictureId = fileName.endsWith(Config.PICTURE_OUTLINE_SOURCE_SUFFIX)
+                                        ? fileName.substring(0, fileName.length()
+                                        - Config.PICTURE_OUTLINE_SOURCE_SUFFIX.length())
+                                        : fileName;
+                                if (!hashMap.containsKey(pictureId)) {
                                     //noinspection ResultOfMethodCallIgnored
                                     pic_file.delete();
                                     File temp_file = new File(Config.DEFAULT_PICTURE_TEMP_DIR + pic_file.getName());
@@ -113,4 +118,3 @@ public class ApplicationMethods {
         }).start();
     }
 }
-

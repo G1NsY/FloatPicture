@@ -1,5 +1,6 @@
 package tool.xfy9326.floatpicture.Activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -23,7 +24,7 @@ public class PictureSettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
         ViewSet();
         fragmentSet(savedInstanceState);
-        setBackResult();
+        setResult(Activity.RESULT_CANCELED);
     }
 
     private void ViewSet() {
@@ -48,17 +49,6 @@ public class PictureSettingsActivity extends AppCompatActivity {
         }
     }
 
-    private void setBackResult() {
-        Intent intent = getIntent();
-        if (intent != null) {
-            if (intent.getBooleanExtra(Config.INTENT_PICTURE_EDIT_MODE, false)) {
-                Intent result_intent = new Intent();
-                result_intent.putExtra(Config.INTENT_PICTURE_EDIT_POSITION, getIntent().getIntExtra(Config.INTENT_PICTURE_EDIT_POSITION, -1));
-                setResult(Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_CHANGE, result_intent);
-            }
-        }
-    }
-
     @Override
     public void onBackPressed() {
         mPictureSettingsFragment.exit();
@@ -77,6 +67,13 @@ public class PictureSettingsActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         if (itemId == R.id.menu_picture_settings_save) {
             mPictureSettingsFragment.saveAllData();
+            Intent resultIntent = new Intent();
+            if (getIntent().getBooleanExtra(Config.INTENT_PICTURE_EDIT_MODE, false)) {
+                resultIntent.putExtra(
+                        Config.INTENT_PICTURE_EDIT_POSITION,
+                        getIntent().getIntExtra(Config.INTENT_PICTURE_EDIT_POSITION, -1));
+            }
+            setResult(Activity.RESULT_OK, resultIntent);
             finish();
         } else if (itemId == android.R.id.home) {
             // 当点击左上角返回按钮（id 为 android.R.id.home）时
