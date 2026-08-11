@@ -1,7 +1,7 @@
 # FloatPicture 2.0（悬浮图片2）
 
 <p>
-  <img src="docs/logo-colored.jpg" alt="FloatPicture Logo" width="240" align="left" hspace="20">
+  <img src="docs/logo-colored.jpg" alt="FloatPicture Logo" width="180" align="left" hspace="20">
   <strong>安卓悬浮参考图工具（Floating Reference Image Tool for Android）</strong><br><br>
   使用本软件可以将手机拍摄或导入的照片快速生成彩色线稿参考图，并悬浮显示在其他应用上方。适用于拍摄时的构图与姿态对齐，也可用于平板绘画中的临摹、写生参考和比例检查。
 </p>
