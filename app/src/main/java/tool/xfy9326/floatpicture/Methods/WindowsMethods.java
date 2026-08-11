@@ -7,6 +7,7 @@ import android.graphics.PixelFormat;
 import android.os.Build;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import tool.xfy9326.floatpicture.MainApplication;
@@ -21,6 +22,7 @@ public class WindowsMethods {
     @SuppressWarnings("SameParameterValue")
     public static void createWindow(WindowManager windowManager, View pictureView, boolean touchable, boolean overLayout, int layoutPositionX, int layoutPositionY) {
         WindowManager.LayoutParams layoutParams = getDefaultLayout(pictureView.getContext(), layoutPositionX, layoutPositionY, touchable, overLayout);
+        applyRenderedImageSize(pictureView, layoutParams);
         windowManager.addView(pictureView, layoutParams);
     }
 
@@ -54,12 +56,33 @@ public class WindowsMethods {
 
     public static void updateWindow(WindowManager windowManager, FloatImageView pictureView, boolean touchable, boolean overLayout, int layoutPositionX, int layoutPositionY) {
         WindowManager.LayoutParams layoutParams = getDefaultLayout(pictureView.getContext(), layoutPositionX, layoutPositionY, touchable, overLayout);
+        applyRenderedImageSize(pictureView, layoutParams);
         windowManager.updateViewLayout(pictureView, layoutParams);
+    }
+
+    private static void applyRenderedImageSize(
+            View pictureView, WindowManager.LayoutParams layoutParams) {
+        if (pictureView instanceof FloatImageView) {
+            FloatImageView floatImageView = (FloatImageView) pictureView;
+            if (floatImageView.getRenderedImageWidth() > 0
+                    && floatImageView.getRenderedImageHeight() > 0) {
+                layoutParams.width = floatImageView.getRenderedImageWidth();
+                layoutParams.height = floatImageView.getRenderedImageHeight();
+            }
+        }
+    }
+
+    public static void preserveCurrentWindowSize(FloatImageView pictureView, WindowManager.LayoutParams targetParams) {
+        ViewGroup.LayoutParams currentParams = pictureView.getLayoutParams();
+        if (currentParams != null && currentParams.width > 0 && currentParams.height > 0) {
+            targetParams.width = currentParams.width;
+            targetParams.height = currentParams.height;
+        }
     }
 
     public static void updateWindow(WindowManager windowManager, FloatImageView pictureView, Bitmap bitmap, boolean touchable, boolean overLayout, float zoom_x, float zoom_y, float degree, int layoutPositionX, int layoutPositionY) {
         pictureView.refreshDrawableState();
-        pictureView.setImageBitmap(ImageMethods.resizeBitmap(bitmap, zoom_x, zoom_y, degree));
+        pictureView.configureGestureImage(bitmap, zoom_x, zoom_y, degree);
         updateWindow(windowManager, pictureView, touchable, overLayout, layoutPositionX, layoutPositionY);
     }
     

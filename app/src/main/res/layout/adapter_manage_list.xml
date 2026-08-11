@@ -47,12 +47,14 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/adapter_picture_id"
+                    android:id="@+id/adapter_picture_parameters"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:ellipsize="end"
-                    android:maxLines="1"
+                    android:lineSpacingExtra="2dp"
+                    android:maxLines="2"
+                    android:textDirection="ltr"
                     android:textSize="14sp" />
 
                 <TextView
@@ -62,7 +64,7 @@
                     android:layout_marginTop="10dp"
                     android:text="@string/error_picture_not_found"
                     android:textColor="@android:color/holo_red_light"
-                    android:visibility="invisible" />
+                    android:visibility="gone" />
 
             </LinearLayout>
 

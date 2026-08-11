@@ -21,6 +21,7 @@ public class Config {
     public final static String INTENT_ACTION_NOTIFICATION_BUTTON_CLICK = "ACTION_NOTIFICATION_BUTTON_CLICK";
     public final static String INTENT_ACTION_NOTIFICATION_PREVIOUS = "ACTION_NOTIFICATION_PREVIOUS";
     public final static String INTENT_ACTION_NOTIFICATION_NEXT = "ACTION_NOTIFICATION_NEXT";
+    public final static String INTENT_ACTION_NOTIFICATION_SAVE_GESTURE = "ACTION_NOTIFICATION_SAVE_GESTURE";
     public final static String INTENT_ACTION_NOTIFICATION_UPDATE_COUNT = "ACTION_NOTIFICATION_UPDATE_COUNT";
 
     public final static String DATA_PICTURE_SHOW_ENABLED = "SHOW_ENABLED";
@@ -32,30 +33,31 @@ public class Config {
     public final static String DATA_PICTURE_DEFAULT_ZOOM = "DEFAULT_ZOOM";
     public final static String DATA_PICTURE_ALPHA = "ALPHA";
     public final static String DATA_PICTURE_DEGREE = "DEGREE";
-    public final static String DATA_PICTURE_TOUCH_AND_MOVE = "TOUCH_AND_MOVE";
-    public final static String DATA_ALLOW_PICTURE_OVER_LAYOUT = "ALLOW_PICTURE_OVER_LAYOUT";
 
     public final static boolean DATA_DEFAULT_PICTURE_SHOW_ENABLED = true;
     public final static int DATA_DEFAULT_PICTURE_POSITION_X = 100;
     public final static int DATA_DEFAULT_PICTURE_POSITION_Y = 100;
     public final static float DATA_DEFAULT_PICTURE_ALPHA = 0.5f;
     public final static float DATA_DEFAULT_PICTURE_DEGREE = 0f;
-    public final static boolean DATA_DEFAULT_PICTURE_TOUCH_AND_MOVE = false;
-    public final static boolean DATA_DEFAULT_ALLOW_PICTURE_OVER_LAYOUT = false;
 
     public final static String PREFERENCE_PICTURE_NAME = "settings_picture_name";
     public final static String PREFERENCE_PICTURE_REPLACE = "settings_picture_replace";
+    public final static String PREFERENCE_PICTURE_COPY_CATEGORY = "settings_picture_copy_category";
+    public final static String PREFERENCE_PICTURE_SAVE_AS_COPY = "settings_picture_save_as_copy";
     public final static String PREFERENCE_PICTURE_OUTLINE = "settings_picture_outline";
-    public final static String PREFERENCE_ALLOW_PICTURE_OVER_LAYOUT = "settings_allow_picture_over_layout";
     public final static String PREFERENCE_PICTURE_RESIZE = "settings_picture_resize";
     public final static String PREFERENCE_PICTURE_ALPHA = "settings_picture_alpha";
     public final static String PREFERENCE_PICTURE_POSITION = "settings_picture_position";
     public final static String PREFERENCE_PICTURE_DEGREE = "settings_picture_degree";
-    public final static String PREFERENCE_PICTURE_TOUCH_AND_MOVE = "settings_picture_touchable_and_moveable";
 
     public final static String PREFERENCE_SHOW_NOTIFICATION_CONTROL = "show_notification_control";
     public final static String PREFERENCE_NEW_PICTURE_QUALITY = "new_picture_quality";
+    public final static String PREFERENCE_ALLOW_MULTIPLE_FLOATING_PICTURES = "allow_multiple_floating_pictures";
     public final static String PREFERENCE_TOUCHABLE_POSITION_EDIT = "touchable_position_edit";
+    public final static String PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN = "allow_global_drag_over_screen";
+    public final static String PREFERENCE_PINCH_ROTATION = "pinch_rotation";
+    public final static String PREFERENCE_SAVE_GESTURE_ADJUSTMENTS = "save_gesture_adjustments";
+    public final static String PREFERENCE_LOCK_GESTURES_AFTER_SAVE = "lock_gestures_after_save";
 
     public final static String LICENSE_PATH_APPLICATION = "LICENSE";
     private final static String DEFAULT_ROOT_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator;
@@ -63,5 +65,6 @@ public class Config {
     public final static String DEFAULT_PICTURE_TEMP_DIR = DEFAULT_APPLICATION_DIR + "Pictures" + File.separator + ".TEMP" + File.separator;
     final static String DEFAULT_DATA_DIR = DEFAULT_APPLICATION_DIR + "Data" + File.separator;
     public final static String DEFAULT_PICTURE_DIR = DEFAULT_APPLICATION_DIR + "Pictures" + File.separator;
+    public final static String PICTURE_OUTLINE_SOURCE_SUFFIX = ".outline_source";
     public final static String NO_MEDIA_FILE_DIR = DEFAULT_APPLICATION_DIR + File.separator + ".nomedia";
 }

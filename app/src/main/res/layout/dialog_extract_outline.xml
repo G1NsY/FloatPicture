@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="220dp"
         android:layout_marginTop="12dp"
-        android:background="#777777">
+        android:background="#D0D0D0">
 
         <ImageView
             android:id="@+id/image_outline_preview"
@@ -33,6 +33,25 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center" />
     </FrameLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/settings_picture_outline_color" />
+
+    <Spinner
+        android:id="@+id/spinner_outline_color"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/settings_picture_outline_colors" />
+
+    <CheckBox
+        android:id="@+id/check_outline_gray_background"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/settings_picture_outline_keep_gray_background" />
 
     <TextView
         android:id="@+id/text_outline_detail"

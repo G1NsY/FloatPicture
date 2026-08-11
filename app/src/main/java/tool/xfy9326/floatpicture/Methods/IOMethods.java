@@ -123,6 +123,40 @@ public class IOMethods {
         }
     }
 
+    public static boolean copyFile(String sourcePath, String targetPath) {
+        File source = new File(sourcePath);
+        File target = new File(targetPath);
+        File temporary = new File(targetPath + ".copying");
+        if (!source.isFile() || target.exists()) return false;
+
+        File parent = target.getParentFile();
+        if (parent != null && !parent.isDirectory() && !parent.mkdirs()) return false;
+        if (temporary.exists() && !temporary.delete()) return false;
+
+        try (InputStream inputStream = new FileInputStream(source);
+             OutputStream outputStream = new FileOutputStream(temporary)) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, count);
+            }
+            outputStream.flush();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            //noinspection ResultOfMethodCallIgnored
+            temporary.delete();
+            return false;
+        }
+
+        if (!temporary.isFile() || temporary.length() != source.length()
+                || !temporary.renameTo(target)) {
+            //noinspection ResultOfMethodCallIgnored
+            temporary.delete();
+            return false;
+        }
+        return true;
+    }
+
     @SuppressWarnings("SameParameterValue")
 //    static void saveBitmap(Bitmap bitmap, int quality, String path) {
 //        File file = new File(path);

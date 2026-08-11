@@ -10,6 +10,18 @@
             app:key="show_notification_control"
             app:summary="@string/settings_global_show_notification_control_sum"
             app:title="@string/settings_global_show_notification_control" />
+        <CheckBoxPreference
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="allow_multiple_floating_pictures"
+            app:summary="@string/settings_global_allow_multiple_floating_pictures_sum"
+            app:title="@string/settings_global_allow_multiple_floating_pictures" />
+        <CheckBoxPreference
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="allow_global_drag_over_screen"
+            app:summary="@string/settings_global_allow_drag_over_screen_sum"
+            app:title="@string/settings_global_allow_drag_over_screen" />
         <Preference
             app:iconSpaceReserved="false"
             app:key="new_picture_quality"
@@ -26,6 +38,25 @@
             app:key="touchable_position_edit"
             app:summary="@string/settings_global_advanced_touchable_position_edit_sum"
             app:title="@string/settings_global_advanced_touchable_position_edit" />
+        <CheckBoxPreference
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="pinch_rotation"
+            app:summary="@string/settings_global_pinch_rotation_sum"
+            app:title="@string/settings_global_pinch_rotation" />
+        <CheckBoxPreference
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="save_gesture_adjustments"
+            app:summary="@string/settings_global_save_gesture_adjustments_sum"
+            app:title="@string/settings_global_save_gesture_adjustments" />
+        <CheckBoxPreference
+            app:defaultValue="false"
+            app:dependency="save_gesture_adjustments"
+            app:iconSpaceReserved="false"
+            app:key="lock_gestures_after_save"
+            app:summary="@string/settings_global_lock_gestures_after_save_sum"
+            app:title="@string/settings_global_lock_gestures_after_save" />
     </PreferenceCategory>
 
 </PreferenceScreen>
