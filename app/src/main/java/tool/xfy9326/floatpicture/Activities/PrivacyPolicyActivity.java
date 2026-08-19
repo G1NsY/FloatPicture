@@ -16,9 +16,7 @@ import tool.xfy9326.floatpicture.Methods.ApplicationMethods;
 import tool.xfy9326.floatpicture.R;
 import tool.xfy9326.floatpicture.Utils.Config;
 
-public class LicenseActivity extends AppCompatActivity {
-    private LayoutInflater inflater;
-
+public class PrivacyPolicyActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,11 +25,7 @@ public class LicenseActivity extends AppCompatActivity {
                 findViewById(R.id.layout_license_toolbar_container));
         ApplicationMethods.applyNavigationBarBottomInset(
                 findViewById(R.id.layout_license_scroll));
-        inflater = LayoutInflater.from(LicenseActivity.this);
-        ViewSet();
-    }
 
-    private void ViewSet() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -40,21 +34,20 @@ public class LicenseActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        LinearLayout main_layout = findViewById(R.id.layout_license);
-
-        String license_application = IOMethods.readAssetText(this, Config.LICENSE_PATH_APPLICATION);
-
-        addLicense(getString(R.string.app_name), getString(R.string.website), license_application, main_layout);
+        LinearLayout mainLayout = findViewById(R.id.layout_license);
+        RelativeLayout card = (RelativeLayout) LayoutInflater.from(this).inflate(
+                R.layout.widget_card_license,
+                findViewById(R.id.layout_license_card));
+        ((TextView) card.findViewById(R.id.licence_title)).setText(R.string.privacy_policy);
+        ((TextView) card.findViewById(R.id.licence_url)).setText(R.string.privacy_contact_url);
+        ((TextView) card.findViewById(R.id.licence_data)).setText(
+                IOMethods.readAssetText(this, Config.PRIVACY_POLICY_PATH_APPLICATION));
+        mainLayout.addView(card);
     }
 
-    private void addLicense(String title, String url, String data, LinearLayout main_layout) {
-        RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.widget_card_license, findViewById(R.id.layout_license_card));
-        TextView textview_title = layout.findViewById(R.id.licence_title);
-        textview_title.setText(title);
-        TextView textview_url = layout.findViewById(R.id.licence_url);
-        textview_url.setText(url);
-        TextView textview_data = layout.findViewById(R.id.licence_data);
-        textview_data.setText(data);
-        main_layout.addView(layout);
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
     }
 }

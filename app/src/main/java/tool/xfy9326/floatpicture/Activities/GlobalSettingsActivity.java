@@ -11,6 +11,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentTransaction;
 
 import tool.xfy9326.floatpicture.R;
+import tool.xfy9326.floatpicture.Methods.ApplicationMethods;
 import tool.xfy9326.floatpicture.View.GlobalSettingsFragment;
 
 
@@ -20,6 +21,10 @@ public class GlobalSettingsActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        ApplicationMethods.applyStatusBarTopInset(
+                findViewById(R.id.layout_picture_settings_toolbar));
+        ApplicationMethods.applyNavigationBarBottomInset(
+                findViewById(R.id.layout_picture_settings_content));
         ViewSet();
         fragmentSet(savedInstanceState);
     }

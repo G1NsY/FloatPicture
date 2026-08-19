@@ -1,0 +1,40 @@
+FloatPicture Privacy Policy
+Last updated: August 11, 2026
+
+FloatPicture is an offline floating-picture utility. It does not require an account and does not include advertising, analytics, or tracking services. The app does not upload your pictures or usage data to a server.
+
+Pictures and local data
+You choose pictures through Android's system file picker. Selected pictures and the settings you create are copied to the app's private storage so that floating pictures can continue to work. Other apps cannot normally access this private storage. This data is removed when you uninstall the app. You can also delete individual pictures inside the app.
+
+Permissions
+Display over other apps: used only to show the floating pictures you request above other apps.
+Notifications: used to display the optional persistent control panel for the floating-picture foreground service.
+Foreground service: used to keep user-requested floating pictures and their visible controls available while you use other apps.
+
+Data sharing and retention
+FloatPicture does not sell or share personal data. No personal data is transmitted by the app. Local pictures and settings remain on your device until you delete them or uninstall the app.
+
+Contact
+For privacy questions or support, use:
+https://github.com/G1NsY/FloatPicture2/issues
+
+
+FloatPicture 隐私政策
+更新日期：2026 年 8 月 11 日
+
+FloatPicture 是一款离线悬浮图片工具。应用无需注册账号，不包含广告、统计分析或跟踪服务，也不会把你的图片或使用数据上传到服务器。
+
+图片与本地数据
+图片由你通过 Android 系统文件选择器主动选择。选中的图片以及你创建的设置会复制到应用私有存储中，以便悬浮图片持续工作。其他应用通常无法访问这些私有数据。卸载应用时这些数据会被系统删除，你也可以在应用内逐张删除图片。
+
+权限用途
+显示在其他应用上层：仅用于按你的操作显示悬浮图片。
+通知：用于显示可选的常驻控制面板。
+前台服务：用于在你使用其他应用时维持你主动开启的悬浮图片及其可见控制功能。
+
+数据共享与保留
+FloatPicture 不出售或共享个人数据，应用不会传输个人数据。图片与设置只保存在你的设备中，直到你主动删除或卸载应用。
+
+联系方式
+如有隐私或支持问题，请访问：
+https://github.com/G1NsY/FloatPicture2/issues

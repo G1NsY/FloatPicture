@@ -32,6 +32,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import java.util.Objects;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import tool.xfy9326.floatpicture.Methods.ImageMethods;
@@ -368,6 +369,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                 ImageMethods.OUTLINE_RED,
                 ImageMethods.OUTLINE_GREEN,
                 ImageMethods.OUTLINE_BLUE,
+                ImageMethods.OUTLINE_CYAN,
                 ImageMethods.OUTLINE_BLACK,
                 ImageMethods.OUTLINE_WHITE
         };
@@ -1104,7 +1106,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         seekBar.setMax(8);
         seekBar.setProgress((int) (picture_degree / 45));
         final EditText editText = mView.findViewById(R.id.edittext_set_size);
-        editText.setText(String.valueOf((int) picture_degree));
+        editText.setText(formatDegree(picture_degree));
         picture_degree_temp = picture_degree;
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -1113,7 +1115,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                     // 核心修改：每个进度代表 45 度
                     picture_degree_temp = progress * 45;
 
-                    editText.setText(String.valueOf((int) picture_degree_temp));
+                    editText.setText(formatDegree(picture_degree_temp));
 
                     WindowsMethods.updateWindow(windowManager, floatImageView_Edit, bitmap_Edit,
                             false, allow_picture_over_layout, zoom_x, zoom_y,
@@ -1175,13 +1177,14 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
 
             if (inputVal < 0) inputVal = 0;
             if (inputVal > 360) inputVal = 360;
+            inputVal = Math.round(inputVal * 100f) / 100f;
 
             picture_degree_temp = inputVal;
             int nearestProgress = Math.round(inputVal / 45f);
             seekBar.setProgress(nearestProgress);
 
-            // 确保文字显示用户输入的精确值
-            v.setText(String.valueOf((int)inputVal));
+            // 手动输入和保存统一保留到 0.01 度。
+            v.setText(formatDegree(inputVal));
 
             WindowsMethods.updateWindow(windowManager, floatImageView_Edit, bitmap_Edit,
                     false, allow_picture_over_layout, zoom_x, zoom_y,
@@ -1189,6 +1192,10 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static String formatDegree(float degree) {
+        return String.format(Locale.US, "%.2f", Math.round(degree * 100f) / 100f);
     }
     private void setPictureAlpha() {
         View mView = inflater.inflate(R.layout.dialog_set_size, requireActivity().findViewById(R.id.layout_dialog_set_size));

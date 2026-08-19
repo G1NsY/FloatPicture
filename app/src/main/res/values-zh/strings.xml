@@ -29,11 +29,12 @@
     <string name="settings_picture_outline">生成彩色线稿参考图</string>
     <string name="settings_picture_outline_sum">将导入的图片快速转换为线稿参考图</string>
     <string name="settings_picture_outline_color">轮廓颜色</string>
-    <string name="settings_picture_outline_keep_gray_background">保留 18% 灰色背景</string>
+    <string name="settings_picture_outline_keep_gray_background" formatted="false">保留 18% 灰色背景</string>
     <string-array name="settings_picture_outline_colors">
         <item>红色</item>
         <item>绿色</item>
         <item>蓝色</item>
+        <item>青色</item>
         <item>黑色</item>
         <item>白色</item>
     </string-array>
@@ -48,10 +49,10 @@
     <string name="settings_picture_position_warn">请输入一个正确的窗口位置！</string>
     <string name="settings_picture_position_x">X 坐标:</string>
     <string name="settings_picture_position_y">Y 坐标:</string>
-    <string name="settings_picture_resize">大小</string>
-    <string name="settings_picture_resize_size">大小:</string>
-    <string name="settings_picture_resize_sum">等比例缩放窗口与图片</string>
-    <string name="settings_picture_resize_warn">请输入一个正确的图片大小！</string>
+    <string name="settings_picture_resize">尺寸</string>
+    <string name="settings_picture_resize_size">尺寸：</string>
+    <string name="settings_picture_resize_sum">精确到 0.001 倍或 1 像素</string>
+    <string name="settings_picture_resize_warn">请输入一个正确的图片尺寸！</string>
     <string name="action_warn_edit_hided_window">你不能编辑一个已经隐藏的窗口！</string>
     <string name="action_delete_window">成功删除窗口！</string>
     <string name="action_add_window">成功添加窗口！</string>
@@ -74,6 +75,12 @@
     <string name="application_modified_by">维护与修改：</string>
     <string name="modified_author">G1NsY(RY)</string>
     <string name="open_source_license">开源协议</string>
+    <string name="privacy_policy">隐私政策</string>
+    <string name="privacy_contact_url">https://github.com/G1NsY/FloatPicture2/issues</string>
+    <string name="privacy_acknowledgement_title">使用前说明</string>
+    <string name="privacy_acknowledgement_message">悬浮图片只会在本机处理你主动选择的图片。应用需要悬浮窗权限来显示图片，并可能使用通知显示可选的控制面板。请在继续前阅读隐私政策。</string>
+    <string name="privacy_agree_and_continue">同意并继续</string>
+    <string name="view_privacy_policy">查看隐私政策</string>
     <string name="copyright">原始作品版权所有 © 2017 XFY9326\n修改部分版权所有 © 2026 G1NsY\n基于 GNU GPL v3 或更高版本授权</string>
     <string name="imageview_app_icon">应用图标</string>
     <string name="action_warn_manage_list_empty">没有图片正在显示\n点击+按钮新建</string>
@@ -82,6 +89,21 @@
     <string name="settings_global_picture_quality_sum">设置新图片的图片质量 (默认 80)</string>
     <string name="settings_global_picture_quality_quality">质量：</string>
     <string name="settings_global_picture_quality_warn">请输入一个正确的图片质量！</string>
+    <string name="settings_import_legacy_data">导入旧版数据</string>
+    <string name="settings_import_legacy_data_sum">选择旧版 FloatPicture 文件夹，导入图片和设置</string>
+    <string name="legacy_import_confirm_title">导入旧版数据？</string>
+    <string name="legacy_import_confirm_message">请选择旧版 FloatPicture 文件夹，也可以选择它的上一级文件夹。导入的图片和设置会替换当前应用数据；如果导入未能完整完成，现有数据会保持不变。</string>
+    <string name="select_folder">选择文件夹</string>
+    <string name="legacy_import_in_progress">正在导入…</string>
+    <string name="legacy_import_unsupported">旧版数据导入需要 Android 5.0 或更高版本</string>
+    <string name="legacy_import_success_title">导入完成</string>
+    <string name="legacy_import_success">已导入 %1$d 个文件。现在重新启动应用以载入旧版数据。</string>
+    <string name="legacy_import_failed_title">导入失败</string>
+    <string name="legacy_import_invalid_folder">所选文件夹中没有同时找到 Data 和 Pictures，请选择旧版 FloatPicture 文件夹。</string>
+    <string name="legacy_import_invalid_data">所选文件夹中没有找到有效的 FloatPicture 数据文件。</string>
+    <string name="legacy_import_failed_copy">无法读取或复制旧版文件，当前应用数据没有改变。</string>
+    <string name="legacy_import_failed_replace">无法替换当前数据，原有应用数据已经恢复。</string>
+    <string name="restart_now">立即重启</string>
     <string name="application_thank_list">感谢在制作过程中给我帮助的人。</string>
     <string name="error_picture_not_found">无法找到图片缓存！</string>
     <string name="settings_picture_alpha">透明度</string>
@@ -89,17 +111,17 @@
     <string name="transparency">透明度：</string>
     <string name="settings_number_warn">请输入一个正确的数字！</string>
     <string name="settings_picture_degree">角度</string>
-    <string name="settings_picture_degree_sum">旋转图片到任意角度</string>
+    <string name="settings_picture_degree_sum">以 0.01° 精度旋转图片</string>
     <string name="degree">角度：</string>
-    <string name="settings_global_advanced">高级功能</string>
+    <string name="settings_global_advanced">手势功能设置</string>
     <string name="settings_global_advanced_touchable_position_edit">手势移动和缩放</string>
     <string name="settings_global_advanced_touchable_position_edit_sum">勾选后，可单指拖动、双指缩放图片</string>
     <string name="settings_global_pinch_rotation">手势旋转</string>
     <string name="settings_global_pinch_rotation_sum">勾选后，可双指旋转图片</string>
     <string name="settings_global_save_gesture_adjustments">保存手势信息到图片</string>
-    <string name="settings_global_save_gesture_adjustments_sum">勾选后，点击通知栏的保存按钮，将存储最后的调整状态</string>
+    <string name="settings_global_save_gesture_adjustments_sum">勾选后，可将最后的调整状态保存到图片</string>
     <string name="settings_global_lock_gestures_after_save">保存后锁定</string>
-    <string name="settings_global_lock_gestures_after_save_sum">点击保存后，将存储最后的调整状态并锁定手势操作</string>
+    <string name="settings_global_lock_gestures_after_save_sum">保存调整状态后锁定手势操作</string>
     <string name="settings_global_allow_drag_over_screen">允许图片溢出屏幕</string>
     <string name="settings_global_allow_drag_over_screen_sum">勾选后，图片移动可以超过屏幕边界</string>
     <string name="notification_picture_count">共%1$s个图片悬浮窗</string>
@@ -108,11 +130,41 @@
     <string name="imageview_notification_previous">切换到上一张图片</string>
     <string name="imageview_notification_next">切换到下一张图片</string>
     <string name="imageview_notification_save_gesture">保存当前图片的位置、缩放和旋转</string>
+    <string name="imageview_notification_floating_control">显示或隐藏小圆点控制器</string>
     <string name="gesture_adjustments_saved">已保存当前图片的位置、缩放和旋转</string>
     <string name="gesture_adjustments_saved_and_locked">已保存并锁定，拖动缩放和双指旋转已关闭</string>
     <string name="gesture_adjustments_save_failed">当前没有可保存的图片</string>
     <string name="settings_global_show_notification_control_sum">可以通过这个控制窗口是否可见</string>
     <string name="settings_global_show_notification_control">显示通知栏控制面板</string>
+    <string name="settings_global_show_floating_control">显示小圆点控制器</string>
+    <string name="settings_global_show_floating_control_sum">点击小圆点可切换前后图片或隐藏当前图片，可随时关闭</string>
+    <string name="floating_control_title">图片控制</string>
+    <string name="floating_control_open">打开图片控制菜单</string>
+    <string name="floating_control_open_application">打开或隐藏主界面</string>
+    <string name="floating_control_close">收起图片控制菜单</string>
+    <string name="floating_control_no_picture">暂无图片</string>
+    <string name="floating_control_picture_status">%1$d / %2$d · %3$s</string>
+    <string name="floating_control_toggle_picture">显示或隐藏当前图片</string>
+    <string name="floating_control_direction_toggle">切换方向、旋转或关闭精确控制</string>
+    <string name="floating_control_direction_pad">圆形四向位置控制盘</string>
+    <string name="floating_control_rotation_dial">拖动控制点调整图片角度</string>
+    <string name="floating_control_move_up">图片向上移动 1 像素</string>
+    <string name="floating_control_move_down">图片向下移动 1 像素</string>
+    <string name="floating_control_move_left">图片向左移动 1 像素</string>
+    <string name="floating_control_move_right">图片向右移动 1 像素</string>
+    <string name="floating_control_move_failed">请先显示一张图片</string>
+    <string name="floating_control_save_and_lock">保存并锁定</string>
+    <string name="floating_control_save_and_lock_description">保存当前图片的位置、缩放和旋转并锁定手势</string>
+    <string name="floating_control_gesture_toggle">开启或关闭手势移动与缩放</string>
+    <string name="floating_control_rotation_toggle">锁定或解锁手势旋转</string>
+    <string name="floating_control_overflow_toggle">允许或禁止图片溢出屏幕</string>
+    <string name="floating_control_save_gesture">保存手势信息</string>
+    <string name="floating_control_discard_gesture">放弃手势信息并返回上次保存状态</string>
+    <string name="floating_control_confirm_title">请确认</string>
+    <string name="floating_control_confirm_save">确定保存当前图片的位置、缩放和旋转吗？</string>
+    <string name="floating_control_confirm_discard">确定放弃未保存的调整，并返回上次保存的状态吗？</string>
+    <string name="gesture_adjustments_discarded">已放弃调整并恢复上次保存的状态</string>
+    <string name="gesture_adjustments_discard_failed">当前没有可恢复的图片</string>
     <string name="settings_global_allow_multiple_floating_pictures">同时显示多张图片</string>
     <string name="settings_global_allow_multiple_floating_pictures_sum">勾选后，可将多图片同时悬浮</string>
     <string name="restart_to_apply_changes">重启程序以应用更改！</string>
@@ -120,6 +172,7 @@
     <string name="notification_channel">默认</string>
     <string name="notification_channel_des">默认通知</string>
     <string name="settings_picture_size_warn">请输入有效的缩放比例（例如 0.1 到 5.0）</string>
+    <string name="picture_size_adjusted_to_fit_screen">图片尺寸已自动调整以适应屏幕。</string>
     <string name="action_confirm_delete_hint">确认删除这张图片吗？</string>
     <string name="action_confirm_delete">确认删除</string>
     <string name="settings_picture_resize_lock_ratio">锁定比例</string>

@@ -8,6 +8,7 @@ import android.view.View;
 import java.util.HashMap;
 
 import tool.xfy9326.floatpicture.Tools.CrashHandler;
+import tool.xfy9326.floatpicture.Utils.Config;
 import tool.xfy9326.floatpicture.View.FloatImageView;
 import tool.xfy9326.floatpicture.View.ManageListAdapter;
 
@@ -23,6 +24,7 @@ public class MainApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Config.initialize(this);
         ApplicationInit = false;
         if (!BuildConfig.DEBUG) {
             CrashHandler.get().Catch(this);

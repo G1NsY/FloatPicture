@@ -26,6 +26,7 @@ public class ImageMethods {
     public static final int OUTLINE_RED = 0xFFEB2020;
     public static final int OUTLINE_GREEN = 0xFF20B85A;
     public static final int OUTLINE_BLUE = 0xFF2080EB;
+    public static final int OUTLINE_CYAN = 0xFF00BCD4;
     public static final int OUTLINE_BLACK = 0xFF111111;
     public static final int OUTLINE_WHITE = 0xFFFFFFFF;
     private static final int EIGHTEEN_PERCENT_GRAY = 0xFF777777;

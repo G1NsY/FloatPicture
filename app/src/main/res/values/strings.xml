@@ -27,11 +27,12 @@
     <string name="settings_picture_outline">Create colored line-art reference</string>
     <string name="settings_picture_outline_sum">Quickly convert imported images into line-art references</string>
     <string name="settings_picture_outline_color">Outline color</string>
-    <string name="settings_picture_outline_keep_gray_background">Keep 18% gray background</string>
+    <string name="settings_picture_outline_keep_gray_background" formatted="false">Keep 18% gray background</string>
     <string-array name="settings_picture_outline_colors">
         <item>Red</item>
         <item>Green</item>
         <item>Blue</item>
+        <item>Cyan</item>
         <item>Black</item>
         <item>White</item>
     </string-array>
@@ -43,8 +44,8 @@
     <string name="settings_picture_outline_failed">Could not generate the outline. Try a smaller image.</string>
     <string name="settings_picture_control">Picture Control Settings</string>
     <string name="settings_picture_resize">Size</string>
-    <string name="settings_picture_resize_sum">Scaling the size of window and picture.</string>
-    <string name="settings_picture_resize_warn">Please input a correct picture size!</string>
+    <string name="settings_picture_resize_sum">Adjust with 0.001× or 1-pixel precision</string>
+    <string name="settings_picture_resize_warn">Please enter a valid picture size!</string>
     <string name="settings_picture_resize_size">Size:</string>
     <string name="settings_picture_position_sum">Adjust the floating picture position</string>
     <string name="settings_picture_position">Position</string>
@@ -73,6 +74,12 @@
     <string name="application_modified_by">Maintained and modified by:</string>
     <string name="modified_author">G1NsY(RY)</string>
     <string name="open_source_license">Open Source License</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_contact_url">https://github.com/G1NsY/FloatPicture2/issues</string>
+    <string name="privacy_acknowledgement_title">Before you continue</string>
+    <string name="privacy_acknowledgement_message">FloatPicture processes the pictures you choose only on this device. It needs overlay permission to show floating pictures and may use notifications for the optional control panel. Please review the privacy policy before continuing.</string>
+    <string name="privacy_agree_and_continue">Agree and continue</string>
+    <string name="view_privacy_policy">View privacy policy</string>
     <string name="copyright">Original work Copyright © 2017 XFY9326.\nModifications Copyright © 2026 G1NsY.\nLicensed under GNU GPL v3 or later.</string>
     <string name="imageview_app_icon">Application Icon</string>
     <string name="action_warn_manage_list_empty">No Picture is showing now.\nClick + Button to create one.</string>
@@ -81,6 +88,21 @@
     <string name="settings_global_picture_quality_sum">Set default new picture quality (Default 80)</string>
     <string name="settings_global_picture_quality_quality">Quality:</string>
     <string name="settings_global_picture_quality_warn">Please input a correct picture quality!</string>
+    <string name="settings_import_legacy_data">Import legacy data</string>
+    <string name="settings_import_legacy_data_sum">Select the old FloatPicture folder and import its pictures and settings</string>
+    <string name="legacy_import_confirm_title">Import legacy data?</string>
+    <string name="legacy_import_confirm_message">Select the old FloatPicture folder, or its parent folder. The imported pictures and settings will replace the current app data. Existing data is kept if the import cannot be completed.</string>
+    <string name="select_folder">Select folder</string>
+    <string name="legacy_import_in_progress">Importing…</string>
+    <string name="legacy_import_unsupported">Legacy import requires Android 5.0 or later</string>
+    <string name="legacy_import_success_title">Import completed</string>
+    <string name="legacy_import_success">Imported %1$d files. Restart the app now to load the legacy data.</string>
+    <string name="legacy_import_failed_title">Import failed</string>
+    <string name="legacy_import_invalid_folder">The selected folder does not contain both Data and Pictures. Please select the old FloatPicture folder.</string>
+    <string name="legacy_import_invalid_data">The selected folder does not contain valid FloatPicture data files.</string>
+    <string name="legacy_import_failed_copy">The legacy files could not be read or copied. Current app data was not changed.</string>
+    <string name="legacy_import_failed_replace">The import could not replace the current data. The previous app data has been restored.</string>
+    <string name="restart_now">Restart now</string>
     <string name="application_thank_list">Thanks to all who helped during the production.</string>
     <string name="error_picture_not_found">Can\'t find picture temp!</string>
     <string name="settings_picture_alpha">Transparency</string>
@@ -88,17 +110,17 @@
     <string name="transparency">Transparency:</string>
     <string name="settings_number_warn">Please input a correct number!</string>
     <string name="settings_picture_degree">Angle</string>
-    <string name="settings_picture_degree_sum">Rotate picture to any degree</string>
+    <string name="settings_picture_degree_sum">Rotate picture to any angle with 0.01° precision</string>
     <string name="degree">Degree:</string>
-    <string name="settings_global_advanced">Advanced Functions</string>
+    <string name="settings_global_advanced">Gesture Settings</string>
     <string name="settings_global_advanced_touchable_position_edit">Gesture move and resize</string>
     <string name="settings_global_advanced_touchable_position_edit_sum">Use one finger to drag and two fingers to resize the picture.</string>
     <string name="settings_global_pinch_rotation">Gesture rotation</string>
     <string name="settings_global_pinch_rotation_sum">Use two fingers to rotate the picture.</string>
     <string name="settings_global_save_gesture_adjustments">Save gesture state to picture</string>
-    <string name="settings_global_save_gesture_adjustments_sum">Tap the notification save button to store the latest adjustment state.</string>
+    <string name="settings_global_save_gesture_adjustments_sum">Store the latest adjustment state in the picture.</string>
     <string name="settings_global_lock_gestures_after_save">Lock after saving</string>
-    <string name="settings_global_lock_gestures_after_save_sum">After saving, store the latest adjustment state and lock gesture controls.</string>
+    <string name="settings_global_lock_gestures_after_save_sum">Lock gesture controls after saving the adjustment state.</string>
     <string name="settings_global_allow_drag_over_screen">Allow picture beyond screen</string>
     <string name="settings_global_allow_drag_over_screen_sum">Allow the picture to move beyond the screen boundary.</string>
     <string name="notification_picture_count">%1$s picture window in total.</string>
@@ -107,11 +129,41 @@
     <string name="imageview_notification_previous">Switch to previous picture</string>
     <string name="imageview_notification_next">Switch to next picture</string>
     <string name="imageview_notification_save_gesture">Save the current picture position, scale and rotation</string>
+    <string name="imageview_notification_floating_control">Show or hide the floating dot controller</string>
     <string name="gesture_adjustments_saved">Current picture position, scale and rotation saved</string>
     <string name="gesture_adjustments_saved_and_locked">Saved and locked; dragging, resizing and two-finger rotation are now disabled</string>
     <string name="gesture_adjustments_save_failed">There is no current picture to save</string>
     <string name="settings_global_show_notification_control">Show notification control board</string>
     <string name="settings_global_show_notification_control_sum">Can set windows\' visibility by this.</string>
+    <string name="settings_global_show_floating_control">Show floating dot controller</string>
+    <string name="settings_global_show_floating_control_sum">Tap the dot to switch pictures or hide the current picture; it can be turned off at any time</string>
+    <string name="floating_control_title">Picture controls</string>
+    <string name="floating_control_open">Open picture controls</string>
+    <string name="floating_control_open_application">Show or hide the main screen</string>
+    <string name="floating_control_close">Collapse picture controls</string>
+    <string name="floating_control_no_picture">No picture</string>
+    <string name="floating_control_picture_status">%1$d / %2$d · %3$s</string>
+    <string name="floating_control_toggle_picture">Show or hide current picture</string>
+    <string name="floating_control_direction_toggle">Switch between direction, rotation and closed precision controls</string>
+    <string name="floating_control_direction_pad">Circular four-way position control</string>
+    <string name="floating_control_rotation_dial">Drag the control point to adjust the picture angle</string>
+    <string name="floating_control_move_up">Move picture up by 1 pixel</string>
+    <string name="floating_control_move_down">Move picture down by 1 pixel</string>
+    <string name="floating_control_move_left">Move picture left by 1 pixel</string>
+    <string name="floating_control_move_right">Move picture right by 1 pixel</string>
+    <string name="floating_control_move_failed">Show a picture before moving it</string>
+    <string name="floating_control_save_and_lock">Save and lock</string>
+    <string name="floating_control_save_and_lock_description">Save the current picture position, scale and rotation, then lock gestures</string>
+    <string name="floating_control_gesture_toggle">Turn gesture movement and scaling on or off</string>
+    <string name="floating_control_rotation_toggle">Lock or unlock gesture rotation</string>
+    <string name="floating_control_overflow_toggle">Allow or prevent the picture from extending beyond the screen</string>
+    <string name="floating_control_save_gesture">Save gesture adjustments</string>
+    <string name="floating_control_discard_gesture">Discard gesture adjustments and restore the last saved state</string>
+    <string name="floating_control_confirm_title">Confirm</string>
+    <string name="floating_control_confirm_save">Save the current picture position, scale and rotation?</string>
+    <string name="floating_control_confirm_discard">Discard unsaved adjustments and restore the last saved state?</string>
+    <string name="gesture_adjustments_discarded">Adjustments discarded and last saved state restored</string>
+    <string name="gesture_adjustments_discard_failed">There is no current picture to restore</string>
     <string name="settings_global_allow_multiple_floating_pictures">Show multiple pictures at once</string>
     <string name="settings_global_allow_multiple_floating_pictures_sum">When enabled, multiple pictures can float on screen at the same time.</string>
     <string name="restart_to_apply_changes">Restart the application to apply this change!</string>
