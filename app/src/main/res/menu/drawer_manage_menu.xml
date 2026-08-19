@@ -10,6 +10,10 @@
             android:icon="@drawable/ic_settings"
             android:title="@string/settings_global_label" />
         <item
+            android:id="@+id/menu_privacy_policy"
+            android:icon="@drawable/ic_about"
+            android:title="@string/privacy_policy" />
+        <item
             android:id="@+id/menu_about"
             android:icon="@drawable/ic_about"
             android:title="@string/about" />

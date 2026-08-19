@@ -327,6 +327,52 @@ public class FloatImageView extends AppCompatImageView {
         return normalizeDegree(savedDegree + gestureDegreeOffset);
     }
 
+    public boolean setCurrentDegreeFromControl(float degree) {
+        if (gestureSourceBitmap == null || gestureSourceBitmap.isRecycled()) {
+            return false;
+        }
+        float normalizedDegree = normalizeDegree(degree);
+        Bitmap renderedBitmap = ImageMethods.resizeBitmap(
+                gestureSourceBitmap,
+                getCurrentZoomX(),
+                getCurrentZoomY(),
+                normalizedDegree);
+        ViewGroup.LayoutParams currentParams = getLayoutParams();
+        if (renderedBitmap == null
+                || !(currentParams instanceof WindowManager.LayoutParams)) {
+            return false;
+        }
+
+        WindowManager.LayoutParams windowParams = (WindowManager.LayoutParams) currentParams;
+        int oldWidth = windowParams.width > 0 ? windowParams.width : Math.max(1, getWidth());
+        int oldHeight = windowParams.height > 0 ? windowParams.height : Math.max(1, getHeight());
+        float centerX = windowParams.x + oldWidth / 2f;
+        float centerY = windowParams.y + oldHeight / 2f;
+        int newWidth = renderedBitmap.getWidth();
+        int newHeight = renderedBitmap.getHeight();
+
+        gestureDegreeOffset = normalizeAngleDelta(normalizedDegree - savedDegree);
+        currentRenderedWidth = newWidth;
+        currentRenderedHeight = newHeight;
+        windowParams.width = newWidth;
+        windowParams.height = newHeight;
+        windowParams.x = Math.round(centerX - newWidth / 2f);
+        windowParams.y = Math.round(centerY - newHeight / 2f);
+        mNowPositionX = windowParams.x;
+        mNowPositionY = windowParams.y;
+        setImageBitmap(renderedBitmap);
+        windowManager.updateViewLayout(this, windowParams);
+        return true;
+    }
+
+    public boolean hasUncommittedAdjustments(int savedPositionX, int savedPositionY) {
+        return Math.round(mNowPositionX) != savedPositionX
+                || Math.round(mNowPositionY) != savedPositionY
+                || Math.abs(getCurrentZoomX() - savedZoomX) > 0.0001f
+                || Math.abs(getCurrentZoomY() - savedZoomY) > 0.0001f
+                || Math.abs(normalizeAngleDelta(getCurrentDegree() - savedDegree)) > 0.01f;
+    }
+
     public void commitGestureAdjustments() {
         savedZoomX = getCurrentZoomX();
         savedZoomY = getCurrentZoomY();

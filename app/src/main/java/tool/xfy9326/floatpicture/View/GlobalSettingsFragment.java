@@ -1,6 +1,10 @@
 package tool.xfy9326.floatpicture.View;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.Context;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,8 +18,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
-import androidx.preference.CheckBoxPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
@@ -23,11 +27,14 @@ import androidx.preference.PreferenceManager;
 import java.util.Objects;
 
 import tool.xfy9326.floatpicture.Methods.ManageMethods;
+import tool.xfy9326.floatpicture.Methods.LegacyDataImporter;
+import tool.xfy9326.floatpicture.Activities.MainActivity;
 import tool.xfy9326.floatpicture.R;
 import tool.xfy9326.floatpicture.Utils.Config;
 
 public class GlobalSettingsFragment extends PreferenceFragmentCompat {
     private SharedPreferences sharedPreferences;
+    private Preference legacyImportPreference;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,11 +68,47 @@ public class GlobalSettingsFragment extends PreferenceFragmentCompat {
             PictureQualitySet(preference);
             return true;
         });
+
+        legacyImportPreference = requirePreference(Config.PREFERENCE_IMPORT_LEGACY_DATA);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            legacyImportPreference.setEnabled(false);
+            legacyImportPreference.setSummary(R.string.legacy_import_unsupported);
+        }
+        legacyImportPreference.setOnPreferenceClickListener(preference -> {
+            new AlertDialog.Builder(requireActivity())
+                    .setTitle(R.string.legacy_import_confirm_title)
+                    .setMessage(R.string.legacy_import_confirm_message)
+                    .setPositiveButton(R.string.select_folder, (dialog, which) -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                    | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+                            startActivityForResult(
+                                    intent, Config.REQUEST_CODE_ACTIVITY_IMPORT_LEGACY_DATA);
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .show();
+            return true;
+        });
         
         requirePreference(Config.PREFERENCE_SHOW_NOTIFICATION_CONTROL).setOnPreferenceChangeListener((preference, newValue) -> {
             Toast.makeText(getActivity(), R.string.restart_to_apply_changes, Toast.LENGTH_SHORT).show();
             return true;
         });
+
+        requirePreference(Config.PREFERENCE_SHOW_FLOATING_CONTROL)
+                .setOnPreferenceChangeListener((preference, newValue) -> {
+                    requireActivity().getWindow().getDecorView().post(() -> {
+                        if (isAdded()) {
+                            requireContext().sendBroadcast(new Intent(
+                                    Config.INTENT_ACTION_FLOATING_CONTROL_REFRESH)
+                                    .setPackage(requireContext().getPackageName()));
+                        }
+                    });
+                    return true;
+                });
 
         requirePreference(Config.PREFERENCE_ALLOW_MULTIPLE_FLOATING_PICTURES)
                 .setOnPreferenceChangeListener((preference, newValue) -> {
@@ -89,17 +132,8 @@ public class GlobalSettingsFragment extends PreferenceFragmentCompat {
 
         requirePreference(Config.PREFERENCE_PINCH_ROTATION)
                 .setOnPreferenceChangeListener((preference, newValue) -> {
-                    if ((Boolean) newValue) {
-                        sharedPreferences.edit()
-                                .putBoolean(Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN, true)
-                                .apply();
-                        CheckBoxPreference allowOverScreen = findPreference(
-                                Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN);
-                        if (allowOverScreen != null) {
-                            allowOverScreen.setChecked(true);
-                        }
-                    }
-                    refreshGlobalDragWindowState();
+                    ManageMethods.setRotationGestureEnabled(
+                            requireContext(), (Boolean) newValue);
                     return true;
                 });
 
@@ -113,6 +147,75 @@ public class GlobalSettingsFragment extends PreferenceFragmentCompat {
                     return true;
                 });
 
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == Config.REQUEST_CODE_ACTIVITY_IMPORT_LEGACY_DATA
+                && resultCode == android.app.Activity.RESULT_OK
+                && data != null
+                && data.getData() != null
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            importLegacyFolder(data.getData());
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private void importLegacyFolder(Uri treeUri) {
+        if (treeUri == null || legacyImportPreference == null) {
+            return;
+        }
+        try {
+            requireContext().getContentResolver().takePersistableUriPermission(
+                    treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException ignored) {
+            // The temporary grant is sufficient for the immediate import.
+        }
+
+        legacyImportPreference.setEnabled(false);
+        legacyImportPreference.setSummary(R.string.legacy_import_in_progress);
+        Context applicationContext = requireContext().getApplicationContext();
+        android.app.Activity activity = requireActivity();
+        new Thread(() -> {
+            LegacyDataImporter.Result result = LegacyDataImporter.importFrom(
+                    applicationContext, treeUri);
+            activity.runOnUiThread(() -> showLegacyImportResult(result));
+        }).start();
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private void showLegacyImportResult(LegacyDataImporter.Result result) {
+        if (!isAdded()) {
+            return;
+        }
+        if (legacyImportPreference != null) {
+            legacyImportPreference.setEnabled(true);
+            legacyImportPreference.setSummary(R.string.settings_import_legacy_data_sum);
+        }
+        if (result.isSuccessful()) {
+            new AlertDialog.Builder(requireActivity())
+                    .setTitle(R.string.legacy_import_success_title)
+                    .setMessage(getString(
+                            result.getMessageResource(), result.getImportedFileCount()))
+                    .setPositiveButton(R.string.restart_now, (dialog, which) -> reloadImportedData())
+                    .setCancelable(false)
+                    .show();
+        } else {
+            new AlertDialog.Builder(requireActivity())
+                    .setTitle(R.string.legacy_import_failed_title)
+                    .setMessage(result.getMessageResource())
+                    .setPositiveButton(R.string.done, null)
+                    .show();
+        }
+    }
+
+    private void reloadImportedData() {
+        ManageMethods.prepareForDataReload(requireContext());
+        Intent intent = new Intent(requireContext(), MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        requireActivity().finishAffinity();
     }
 
     private void refreshGlobalDragWindowState() {

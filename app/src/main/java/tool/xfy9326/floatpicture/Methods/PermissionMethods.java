@@ -2,11 +2,9 @@ package tool.xfy9326.floatpicture.Methods;
 
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -15,32 +13,27 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 
 import tool.xfy9326.floatpicture.R;
+import tool.xfy9326.floatpicture.Utils.Config;
 
 public class PermissionMethods {
 
-    public static final String[] StoragePermission = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-
-    public static void askPermission(Activity mActivity, String[] permissions, int requestCode) {
-        if (!checkPermission(mActivity, permissions)) {
-            ActivityCompat.requestPermissions(mActivity, permissions, requestCode);
+    public static void askNotificationPermission(Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && !PreferenceManager.getDefaultSharedPreferences(activity)
+                .getBoolean(Config.PREFERENCE_NOTIFICATION_PERMISSION_REQUESTED, false)) {
+            PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                    .putBoolean(Config.PREFERENCE_NOTIFICATION_PERMISSION_REQUESTED, true)
+                    .apply();
+            ActivityCompat.requestPermissions(
+                    activity,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    Config.REQUEST_CODE_PERMISSION_NOTIFICATION);
         }
     }
 
-    static boolean checkPermission(Context mContext, String[] permissions) {
-        boolean result = false;
-        for (String permission : permissions) {
-            if (ContextCompat.checkSelfPermission(mContext, permission) == PackageManager.PERMISSION_GRANTED) {
-                result = true;
-                break;
-            }
-        }
-        return result;
-    }
-
-    @TargetApi(Build.VERSION_CODES.M)
     @SuppressWarnings("SameParameterValue")
     public static void askOverlayPermission(final Activity mActivity, final int requestCode) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -60,31 +53,25 @@ public class PermissionMethods {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     public static void delayOverlayPermissionCheck(final Context mContext) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(mContext)) {
+            if (Settings.canDrawOverlays(mContext)) {
+                ManageMethods.RunWin(mContext);
+            } else {
                 new Handler().postDelayed(() -> {
-                    if (!Settings.canDrawOverlays(mContext)) {
-                        Toast.makeText(mContext, R.string.permission_warn_overlay_intent, Toast.LENGTH_SHORT).show();
+                    if (Settings.canDrawOverlays(mContext)) {
+                        ManageMethods.RunWin(mContext);
                     } else {
-                        if (PermissionMethods.checkPermission(mContext, PermissionMethods.StoragePermission)) {
-                            ManageMethods.RunWin(mContext);
-                        }
+                        Toast.makeText(mContext, R.string.permission_warn_overlay_intent, Toast.LENGTH_SHORT).show();
                     }
-                }, 2000);
+                }, 1500);
             }
+        } else {
+            ManageMethods.RunWin(mContext);
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
-    public static void explainPermission(final Activity mActivity, final String[] permissions, final int requestCode) {
-        AlertDialog.Builder permissionExplanation = new AlertDialog.Builder(mActivity);
-        permissionExplanation.setTitle(R.string.permission_warn);
-        permissionExplanation.setMessage(R.string.permission_warn_explanation);
-        permissionExplanation.setPositiveButton(R.string.done, (dialogInterface, i) -> askPermission(mActivity, permissions, requestCode));
-        permissionExplanation.setNegativeButton(R.string.done, (dialogInterface, i) -> mActivity.finish());
-        permissionExplanation.setCancelable(false);
-        permissionExplanation.show();
+    public static boolean canDrawOverlays(Context context) {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context);
     }
 }

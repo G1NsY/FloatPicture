@@ -7,9 +7,14 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.view.View;
 
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.navigation.NavigationView;
@@ -29,7 +34,12 @@ public class ApplicationMethods {
 
     public static void startNotificationControl(Context context) {
         if (PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Config.PREFERENCE_SHOW_NOTIFICATION_CONTROL, true)) {
-            context.startService(new Intent(context, NotificationService.class));
+            Intent serviceIntent = new Intent(context, NotificationService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                ContextCompat.startForegroundService(context, serviceIntent);
+            } else {
+                context.startService(serviceIntent);
+            }
         }
     }
 
@@ -60,6 +70,41 @@ public class ApplicationMethods {
         if (navigationView != null) {
             navigationView.setVerticalScrollBarEnabled(false);
         }
+    }
+
+    public static void applyNavigationBarBottomInset(View view) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            return;
+        }
+        int initialPaddingBottom = view.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(view, (target, windowInsets) -> {
+            Insets navigationBars = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.navigationBars());
+            target.setPadding(
+                    target.getPaddingLeft(),
+                    target.getPaddingTop(),
+                    target.getPaddingRight(),
+                    initialPaddingBottom + navigationBars.bottom);
+            return windowInsets;
+        });
+        ViewCompat.requestApplyInsets(view);
+    }
+
+    public static void applyStatusBarTopInset(View view) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            return;
+        }
+        int initialPaddingTop = view.getPaddingTop();
+        ViewCompat.setOnApplyWindowInsetsListener(view, (target, windowInsets) -> {
+            Insets statusBars = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars());
+            target.setPadding(
+                    target.getPaddingLeft(),
+                    initialPaddingTop + statusBars.top,
+                    target.getPaddingRight(),
+                    target.getPaddingBottom());
+            return windowInsets;
+        });
+        ViewCompat.requestApplyInsets(view);
     }
 
     public static void DoubleClickCloseSnackBar(final Activity mActivity, boolean isDoubleClick) {

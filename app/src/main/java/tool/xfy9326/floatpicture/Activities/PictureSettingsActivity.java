@@ -9,9 +9,11 @@ import android.view.MenuItem;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.activity.OnBackPressedCallback;
 import androidx.fragment.app.FragmentTransaction;
 
 import tool.xfy9326.floatpicture.R;
+import tool.xfy9326.floatpicture.Methods.ApplicationMethods;
 import tool.xfy9326.floatpicture.Utils.Config;
 import tool.xfy9326.floatpicture.View.PictureSettingsFragment;
 
@@ -22,8 +24,18 @@ public class PictureSettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        ApplicationMethods.applyStatusBarTopInset(
+                findViewById(R.id.layout_picture_settings_toolbar));
+        ApplicationMethods.applyNavigationBarBottomInset(
+                findViewById(R.id.layout_picture_settings_content));
         ViewSet();
         fragmentSet(savedInstanceState);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                exitWithoutSaving();
+            }
+        });
         setResult(Activity.RESULT_CANCELED);
     }
 
@@ -49,11 +61,11 @@ public class PictureSettingsActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        mPictureSettingsFragment.exit();
+    private void exitWithoutSaving() {
+        if (mPictureSettingsFragment != null) {
+            mPictureSettingsFragment.exit();
+        }
         finish();
-        // 注意：这里已经 finish 了，不需要再执行 super.onBackPressed() 否则可能导致重复退出
     }
 
     @Override
@@ -76,10 +88,7 @@ public class PictureSettingsActivity extends AppCompatActivity {
             setResult(Activity.RESULT_OK, resultIntent);
             finish();
         } else if (itemId == android.R.id.home) {
-            // 当点击左上角返回按钮（id 为 android.R.id.home）时
-            // 调用 fragment 的 exit() 方法来执行不保存的清理/还原逻辑
-            mPictureSettingsFragment.exit();
-            finish();
+            exitWithoutSaving();
         }
         return super.onOptionsItemSelected(item);
     }

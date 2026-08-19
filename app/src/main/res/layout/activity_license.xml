@@ -4,9 +4,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include layout="@layout/widget_toolbar" />
+    <include
+        android:id="@+id/layout_license_toolbar_container"
+        layout="@layout/widget_toolbar" />
 
     <ScrollView
+        android:id="@+id/layout_license_scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="none">
@@ -21,4 +24,3 @@
     </ScrollView>
 
 </LinearLayout>
-

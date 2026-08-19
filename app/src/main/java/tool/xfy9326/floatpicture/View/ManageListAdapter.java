@@ -103,7 +103,7 @@ public class ManageListAdapter extends AdvancedRecyclerView.Adapter<ManageListVi
                 Config.DATA_PICTURE_DEGREE, Config.DATA_DEFAULT_PICTURE_DEGREE);
         holder.textView_Picture_Parameters.setText(String.format(
                 Locale.US,
-                "S(%.3f,%.3f)\nP(%d,%d)  R(%.1f°)",
+                "S(%.3f,%.3f)\nP(%d,%d)  R(%.2f°)",
                 zoomX,
                 zoomY,
                 positionX,

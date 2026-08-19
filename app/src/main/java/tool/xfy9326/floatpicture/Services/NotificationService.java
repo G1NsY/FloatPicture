@@ -10,16 +10,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
-import android.view.View;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,13 +31,13 @@ import tool.xfy9326.floatpicture.Methods.ManageMethods;
 import tool.xfy9326.floatpicture.R;
 import tool.xfy9326.floatpicture.Utils.Config;
 import tool.xfy9326.floatpicture.Utils.PictureData;
-import tool.xfy9326.floatpicture.View.ManageListAdapter;
 
 public class NotificationService extends Service {
     private static final String CHANNEL_ID = "channel_default";
     private RemoteViews remoteViews;
     private NotificationCompat.Builder builder_manage;
     private NotificationButtonBroadcastReceiver notificationButtonBroadcastReceiver;
+    private FloatingControlManager floatingControlManager;
 
     @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig) {
@@ -45,6 +45,9 @@ public class NotificationService extends Service {
         android.view.WindowManager wm = (android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE);
         android.graphics.Point size = new android.graphics.Point();
         wm.getDefaultDisplay().getRealSize(size);
+        if (floatingControlManager != null) {
+            floatingControlManager.onConfigurationChanged();
+        }
     }
 
     private static void createNotificationChannel(@NonNull Context context, @NonNull NotificationManagerCompat notificationManager) {
@@ -62,18 +65,16 @@ public class NotificationService extends Service {
         }
     }
 
-    @SuppressLint({"ForegroundServiceType", "UnspecifiedRegisterReceiverFlag"})
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     public void onCreate() {
         super.onCreate();
         if (notificationButtonBroadcastReceiver == null) {
             notificationButtonBroadcastReceiver = new NotificationButtonBroadcastReceiver();
             IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK);
-            intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_PREVIOUS);
-            intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_NEXT);
-            intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_SAVE_GESTURE);
+            intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_FLOATING_CONTROL_TOGGLE);
             intentFilter.addAction(Config.INTENT_ACTION_NOTIFICATION_UPDATE_COUNT);
+            intentFilter.addAction(Config.INTENT_ACTION_FLOATING_CONTROL_REFRESH);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 registerReceiver(notificationButtonBroadcastReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED);
             } else {
@@ -82,8 +83,19 @@ public class NotificationService extends Service {
         }
         if (builder_manage == null) {
             builder_manage = createNotification();
-            startForeground(Config.NOTIFICATION_ID, builder_manage.build());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                        Config.NOTIFICATION_ID,
+                        builder_manage.build(),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            } else {
+                startForeground(Config.NOTIFICATION_ID, builder_manage.build());
+            }
         }
+        if (floatingControlManager == null) {
+            floatingControlManager = new FloatingControlManager(this);
+        }
+        floatingControlManager.refreshVisibility();
     }
 
     @Nullable
@@ -108,6 +120,10 @@ public class NotificationService extends Service {
     public void onDestroy() {
         // 在服务销毁时也确保窗口被关闭
         ManageMethods.hideAllWindowsRuntime(this);
+        if (floatingControlManager != null) {
+            floatingControlManager.destroy();
+            floatingControlManager = null;
+        }
         
         if (notificationButtonBroadcastReceiver != null) {
             unregisterReceiver(notificationButtonBroadcastReceiver);
@@ -135,38 +151,17 @@ public class NotificationService extends Service {
         builder.setContentIntent(pendingIntent_main);
 
         remoteViews = new RemoteViews(getPackageName(), R.layout.notification_manage);
-        remoteViews.setImageViewResource(R.id.imageview_notification_application, R.mipmap.ic_launcher);
         updatePictureStatus(mainApplication);
 
-        remoteViews.setImageViewResource(R.id.imageview_previous_picture, android.R.drawable.ic_media_previous);
-        Intent intent_previous = new Intent(Config.INTENT_ACTION_NOTIFICATION_PREVIOUS).setPackage(getPackageName());
-        PendingIntent pendingIntent_previous = PendingIntent.getBroadcast(this, 1, intent_previous, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.imageview_previous_picture, pendingIntent_previous);
-
-        remoteViews.setImageViewResource(
-                R.id.imageview_set_picture_view,
-                ManageMethods.isCurrentPictureVisible(this)
-                        ? R.drawable.ic_invisible
-                        : R.drawable.ic_visible);
-        Intent intent_picture_show = new Intent(Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK).setPackage(getPackageName());
-        PendingIntent pendingIntent_picture_show = PendingIntent.getBroadcast(this, 2, intent_picture_show, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.imageview_set_picture_view, pendingIntent_picture_show);
-
-        remoteViews.setImageViewResource(R.id.imageview_next_picture, android.R.drawable.ic_media_next);
-        Intent intent_next = new Intent(Config.INTENT_ACTION_NOTIFICATION_NEXT).setPackage(getPackageName());
-        PendingIntent pendingIntent_next = PendingIntent.getBroadcast(this, 3, intent_next, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.imageview_next_picture, pendingIntent_next);
-
-        remoteViews.setImageViewResource(
-                R.id.imageview_save_gesture, android.R.drawable.ic_menu_save);
-        Intent intent_save_gesture = new Intent(
-                Config.INTENT_ACTION_NOTIFICATION_SAVE_GESTURE).setPackage(getPackageName());
-        PendingIntent pendingIntent_save_gesture = PendingIntent.getBroadcast(
-                this, 4, intent_save_gesture,
+        updateFloatingControlButton();
+        Intent toggleFloatingControl = new Intent(
+                Config.INTENT_ACTION_NOTIFICATION_FLOATING_CONTROL_TOGGLE)
+                .setPackage(getPackageName());
+        PendingIntent toggleFloatingControlIntent = PendingIntent.getBroadcast(
+                this, 1, toggleFloatingControl,
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         remoteViews.setOnClickPendingIntent(
-                R.id.imageview_save_gesture, pendingIntent_save_gesture);
-        updateSaveGestureButtonVisibility();
+                R.id.imageview_set_floating_control, toggleFloatingControlIntent);
 
         builder.setContent(remoteViews);
         return builder;
@@ -177,7 +172,7 @@ public class NotificationService extends Service {
         LinkedHashMap<String, String> pictures = pictureData.getListArray();
         if (pictures.isEmpty()) {
             remoteViews.setTextViewText(R.id.textview_picture_num,
-                    getString(R.string.notification_picture_count, "0"));
+                    getString(R.string.floating_control_no_picture));
             return;
         }
 
@@ -196,64 +191,45 @@ public class NotificationService extends Service {
                         pictures.get(currentPictureId)));
     }
 
-    private void updateSaveGestureButtonVisibility() {
-        boolean visible = androidx.preference.PreferenceManager
+    private void updateFloatingControlButton() {
+        boolean visible = PreferenceManager
                 .getDefaultSharedPreferences(this)
-                .getBoolean(Config.PREFERENCE_SAVE_GESTURE_ADJUSTMENTS, false);
-        remoteViews.setViewVisibility(
-                R.id.imageview_save_gesture, visible ? View.VISIBLE : View.GONE);
+                .getBoolean(Config.PREFERENCE_SHOW_FLOATING_CONTROL, true);
+        remoteViews.setImageViewResource(
+                R.id.imageview_set_floating_control,
+                visible
+                        ? R.drawable.ic_floating_control_on
+                        : R.drawable.ic_floating_control_off);
     }
 
     private class NotificationButtonBroadcastReceiver extends BroadcastReceiver {
-        @SuppressLint("NotifyDataSetChanged")
         @Override
         public void onReceive(Context context, Intent intent) {
             if (remoteViews != null) {
                 MainApplication mainApplication = (MainApplication) getApplicationContext();
-                boolean refreshPictureList = false;
-                if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_BUTTON_CLICK)) {
-                    boolean showCurrentPicture = !ManageMethods.isCurrentPictureVisible(context);
-                    refreshPictureList = ManageMethods.setCurrentPictureVisible(
-                            context, showCurrentPicture);
-                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_PREVIOUS)) {
-                    if (ManageMethods.switchPicture(context, -1)) {
-                        remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
-                        refreshPictureList = true;
-                    }
-                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_NEXT)) {
-                    if (ManageMethods.switchPicture(context, 1)) {
-                        remoteViews.setImageViewResource(R.id.imageview_set_picture_view, R.drawable.ic_invisible);
-                        refreshPictureList = true;
-                    }
-                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_SAVE_GESTURE)) {
-                    boolean lockAfterSave = androidx.preference.PreferenceManager
+                if (Objects.equals(intent.getAction(),
+                        Config.INTENT_ACTION_NOTIFICATION_FLOATING_CONTROL_TOGGLE)) {
+                    boolean currentlyVisible = PreferenceManager
                             .getDefaultSharedPreferences(context)
-                            .getBoolean(Config.PREFERENCE_LOCK_GESTURES_AFTER_SAVE, false);
-                    boolean saved = ManageMethods.saveCurrentPictureGestureAdjustments(context);
-                    Toast.makeText(
-                            context,
-                            saved
-                                    ? (lockAfterSave
-                                    ? R.string.gesture_adjustments_saved_and_locked
-                                    : R.string.gesture_adjustments_saved)
-                                    : R.string.gesture_adjustments_save_failed,
-                            Toast.LENGTH_SHORT).show();
+                            .getBoolean(Config.PREFERENCE_SHOW_FLOATING_CONTROL, true);
+                    PreferenceManager.getDefaultSharedPreferences(context).edit()
+                            .putBoolean(Config.PREFERENCE_SHOW_FLOATING_CONTROL, !currentlyVisible)
+                            .apply();
+                    if (floatingControlManager != null) {
+                        floatingControlManager.refreshVisibility();
+                    }
                 } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_NOTIFICATION_UPDATE_COUNT)) {
                     // Status text is refreshed below after additions, deletions or reordering.
-                }
-                if (refreshPictureList) {
-                    ManageListAdapter manageListAdapter = mainApplication.getManageListAdapter();
-                    if (manageListAdapter != null) {
-                        manageListAdapter.notifyDataSetChanged();
+                } else if (Objects.equals(intent.getAction(), Config.INTENT_ACTION_FLOATING_CONTROL_REFRESH)) {
+                    if (floatingControlManager != null) {
+                        floatingControlManager.refreshVisibility();
                     }
                 }
-                remoteViews.setImageViewResource(
-                        R.id.imageview_set_picture_view,
-                        ManageMethods.isCurrentPictureVisible(context)
-                                ? R.drawable.ic_invisible
-                                : R.drawable.ic_visible);
-                updateSaveGestureButtonVisibility();
+                updateFloatingControlButton();
                 updatePictureStatus(mainApplication);
+                if (floatingControlManager != null) {
+                    floatingControlManager.refreshState();
+                }
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 builder_manage.setContent(remoteViews);
                 Objects.requireNonNull(notificationManager).notify(Config.NOTIFICATION_ID, builder_manage.build());

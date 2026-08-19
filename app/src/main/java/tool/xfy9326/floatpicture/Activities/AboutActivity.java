@@ -20,6 +20,10 @@ public class AboutActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
+        ApplicationMethods.applyStatusBarTopInset(
+                findViewById(R.id.layout_about_toolbar_container));
+        ApplicationMethods.applyNavigationBarBottomInset(
+                findViewById(R.id.layout_about_content));
         ViewSet();
     }
 

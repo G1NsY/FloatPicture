@@ -1,24 +1,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="tool.xfy9326.floatpicture">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".MainApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
-        android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="AllowBackup,GoogleAppIndexingWarning"
-        tools:targetApi="q">
+        tools:ignore="GoogleAppIndexingWarning">
 
         <activity
             android:name=".Activities.MainActivity"
@@ -34,7 +32,6 @@
 
         <activity
             android:name=".Activities.PictureSettingsActivity"
-            android:screenOrientation="user"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
             android:label="@string/settings_label"
             tools:ignore="InnerclassSeparator">
@@ -69,9 +66,23 @@
                 android:value=".Activities.AboutActivity" />
         </activity>
 
+        <activity
+            android:name=".Activities.PrivacyPolicyActivity"
+            android:label="@string/privacy_policy"
+            tools:ignore="InnerclassSeparator">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activities.MainActivity" />
+        </activity>
+
         <service
             android:name=".Services.NotificationService"
-            tools:ignore="InnerclassSeparator" />
+            android:foregroundServiceType="specialUse"
+            tools:ignore="InnerclassSeparator">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps user-requested floating picture controls available while pictures are displayed over other apps." />
+        </service>
 
     </application>
 

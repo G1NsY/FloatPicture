@@ -12,6 +12,13 @@
             app:title="@string/settings_global_show_notification_control" />
         <CheckBoxPreference
             app:defaultValue="true"
+            app:dependency="show_notification_control"
+            app:iconSpaceReserved="false"
+            app:key="show_floating_control"
+            app:summary="@string/settings_global_show_floating_control_sum"
+            app:title="@string/settings_global_show_floating_control" />
+        <CheckBoxPreference
+            app:defaultValue="true"
             app:iconSpaceReserved="false"
             app:key="allow_multiple_floating_pictures"
             app:summary="@string/settings_global_allow_multiple_floating_pictures_sum"
@@ -27,6 +34,11 @@
             app:key="new_picture_quality"
             app:summary="@string/settings_global_picture_quality_sum"
             app:title="@string/settings_global_picture_quality" />
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="import_legacy_data"
+            app:summary="@string/settings_import_legacy_data_sum"
+            app:title="@string/settings_import_legacy_data" />
     </PreferenceCategory>
 
     <PreferenceCategory

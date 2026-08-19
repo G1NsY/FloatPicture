@@ -3,18 +3,15 @@ package tool.xfy9326.floatpicture.Activities;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.preference.PreferenceManager;
@@ -25,6 +22,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+
+import java.lang.ref.WeakReference;
 
 import tool.xfy9326.floatpicture.MainApplication;
 import tool.xfy9326.floatpicture.Methods.ApplicationMethods;
@@ -37,9 +36,13 @@ import tool.xfy9326.floatpicture.View.AdvancedRecyclerView;
 import tool.xfy9326.floatpicture.View.ManageListAdapter;
 
 public class MainActivity extends AppCompatActivity {
+    private static WeakReference<MainActivity> visibleInstance = new WeakReference<>(null);
     private ManageListAdapter manageListAdapter;
     private long BackClickTime;
     private boolean navigateToGlobalSettings = false;
+    private boolean featuresInitialized = false;
+    private AlertDialog privacyDialog;
+    private Bundle initialSavedInstanceState;
 
     public static void SnackShow(Activity mActivity, int resourceId) {
         CoordinatorLayout coordinatorLayout = mActivity.findViewById(R.id.main_layout_content);
@@ -51,22 +54,87 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        init(savedInstanceState);
-        ApplicationMethods.startNotificationControl(this);
+        initialSavedInstanceState = savedInstanceState;
+        BackClickTime = 0;
+        ViewSet();
+        configureBackNavigation();
         ApplicationMethods.ClearUselessTemp(this);
+        if (isPrivacyAccepted()) {
+            initializeFeatures();
+        } else {
+            showPrivacyAcknowledgement();
+        }
     }
 
-    private void init(Bundle savedInstanceState) {
-        BackClickTime = System.currentTimeMillis();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        visibleInstance = new WeakReference<>(this);
+        if (!isPrivacyAccepted()
+                && (privacyDialog == null || !privacyDialog.isShowing())) {
+            showPrivacyAcknowledgement();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        MainActivity activity = visibleInstance.get();
+        if (activity == this) {
+            visibleInstance.clear();
+        }
+        super.onPause();
+    }
+
+    public static boolean hideIfVisible() {
+        MainActivity activity = visibleInstance.get();
+        if (activity == null || activity.isFinishing()) {
+            return false;
+        }
+        activity.moveTaskToBack(true);
+        return true;
+    }
+
+    private boolean isPrivacyAccepted() {
+        return PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean(Config.PREFERENCE_PRIVACY_ACCEPTED, false);
+    }
+
+    private void initializeFeatures() {
+        if (featuresInitialized) {
+            return;
+        }
+        featuresInitialized = true;
+        boolean overlayAlreadyGranted = PermissionMethods.canDrawOverlays(this);
         PermissionMethods.askOverlayPermission(this, Config.REQUEST_CODE_PERMISSION_OVERLAY);
-        PermissionMethods.askPermission(this, PermissionMethods.StoragePermission, Config.REQUEST_CODE_PERMISSION_STORAGE);
-        ViewSet();
+        if (overlayAlreadyGranted && PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean(Config.PREFERENCE_SHOW_NOTIFICATION_CONTROL, true)) {
+            PermissionMethods.askNotificationPermission(this);
+        }
+        ApplicationMethods.startNotificationControl(this);
         MainApplication mainApplication = (MainApplication) getApplicationContext();
-        if (mainApplication.isAppInit() || savedInstanceState == null) {
+        if (mainApplication.isAppInit() || initialSavedInstanceState == null) {
             ManageMethods.RunWin(this);
             mainApplication.setAppInit(true);
             IOMethods.setNoMedia();
         }
+    }
+
+    private void showPrivacyAcknowledgement() {
+        privacyDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.privacy_acknowledgement_title)
+                .setMessage(R.string.privacy_acknowledgement_message)
+                .setPositiveButton(R.string.privacy_agree_and_continue, (dialog, which) -> {
+                    PreferenceManager.getDefaultSharedPreferences(this).edit()
+                            .putBoolean(Config.PREFERENCE_PRIVACY_ACCEPTED, true)
+                            .apply();
+                    initializeFeatures();
+                })
+                .setNeutralButton(R.string.view_privacy_policy, (dialog, which) ->
+                        startActivity(new Intent(this, PrivacyPolicyActivity.class)))
+                .setNegativeButton(R.string.exit_application, (dialog, which) -> finish())
+                .setCancelable(false)
+                .create();
+        privacyDialog.show();
     }
 
     private void ViewSet() {
@@ -79,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(manageListAdapter);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setEmptyView(findViewById(R.id.layout_widget_empty_view));
+        ApplicationMethods.applyNavigationBarBottomInset(recyclerView);
         attachPictureReordering(recyclerView);
 
         FloatingActionButton floatingActionButton = findViewById(R.id.main_button_add);
@@ -120,6 +189,8 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.menu_global_settings) {
                 navigateToGlobalSettings = true;
                 startActivity(new Intent(MainActivity.this, GlobalSettingsActivity.class));
+            } else if (itemId == R.id.menu_privacy_policy) {
+                startActivity(new Intent(MainActivity.this, PrivacyPolicyActivity.class));
             } else if (itemId == R.id.menu_about) {
                 startActivity(new Intent(MainActivity.this, AboutActivity.class));
             } else if (itemId == R.id.menu_back_to_launcher) {
@@ -205,49 +276,33 @@ public class MainActivity extends AppCompatActivity {
             }
         } else if (requestCode == Config.REQUEST_CODE_PERMISSION_OVERLAY) {
             PermissionMethods.delayOverlayPermissionCheck(this);
+            if (PreferenceManager.getDefaultSharedPreferences(this)
+                    .getBoolean(Config.PREFERENCE_SHOW_NOTIFICATION_CONTROL, true)) {
+                PermissionMethods.askNotificationPermission(this);
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == Config.REQUEST_CODE_PERMISSION_STORAGE) {
-            boolean run = true;
-            for (int i = 0; i < grantResults.length; i++) {
-                if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i])) {
-                        PermissionMethods.explainPermission(this, PermissionMethods.StoragePermission, Config.REQUEST_CODE_PERMISSION_STORAGE);
-                    } else {
-                        Toast.makeText(this, R.string.permission_warn_storage_intent, Toast.LENGTH_SHORT).show();
-                    }
-                    run = false;
-                    break;
+    private void configureBackNavigation() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                DrawerLayout drawerLayout = findViewById(R.id.main_drawer_layout);
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                    return;
+                }
+                long backNowClickTime = System.currentTimeMillis();
+                if (BackClickTime > 0 && (backNowClickTime - BackClickTime) < 2200) {
+                    MainApplication mainApplication = (MainApplication) getApplicationContext();
+                    mainApplication.setAppInit(false);
+                    ApplicationMethods.DoubleClickCloseSnackBar(MainActivity.this, true);
+                } else {
+                    ApplicationMethods.DoubleClickCloseSnackBar(MainActivity.this, false);
+                    BackClickTime = backNowClickTime;
                 }
             }
-            if (run && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (Settings.canDrawOverlays(this)) {
-                    ManageMethods.RunWin(this);
-                }
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    @SuppressLint("MissingSuperCall")
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawerLayout = findViewById(R.id.main_drawer_layout);
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        }
-        long BackNowClickTime = System.currentTimeMillis();
-        if ((BackNowClickTime - BackClickTime) < 2200) {
-            MainApplication mainApplication = (MainApplication) getApplicationContext();
-            mainApplication.setAppInit(false);
-            ApplicationMethods.DoubleClickCloseSnackBar(this, true);
-        } else {
-            ApplicationMethods.DoubleClickCloseSnackBar(this, false);
-            BackClickTime = System.currentTimeMillis();
-        }
+        });
     }
 }
