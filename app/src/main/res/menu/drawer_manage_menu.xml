@@ -14,6 +14,10 @@
             android:icon="@drawable/ic_about"
             android:title="@string/privacy_policy" />
         <item
+            android:id="@+id/menu_support"
+            android:icon="@drawable/ic_support_heart"
+            android:title="@string/support_development" />
+        <item
             android:id="@+id/menu_about"
             android:icon="@drawable/ic_about"
             android:title="@string/about" />

@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// Keep normal app support, while allowing a support screen without payment links.
+// This switch is not a declaration of Google Play policy compliance.
+def externalSupport = providers.gradleProperty('externalSupport').getOrElse('true')
+if (!(externalSupport in ['true', 'false'])) {
+    throw new GradleException('externalSupport must be true or false')
+}
+
 android {
     namespace "tool.xfy9326.floatpicture"
     compileSdk 36
@@ -10,6 +17,8 @@ android {
         targetSdkVersion 36
         versionCode 6
         versionName '2.0.5-beta'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        resValue 'bool', 'support_external_enabled', externalSupport
 
         resourceConfigurations.add("zh")
 
@@ -68,4 +77,6 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.exifinterface:exifinterface:1.3.7'
     implementation 'com.google.android.material:material:1.12.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
 }

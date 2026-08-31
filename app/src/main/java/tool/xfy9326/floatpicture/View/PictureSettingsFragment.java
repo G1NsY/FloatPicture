@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.method.DigitsKeyListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -33,6 +34,7 @@ import androidx.preference.PreferenceManager;
 
 import java.util.Objects;
 import java.util.Locale;
+import java.text.DecimalFormatSymbols;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import tool.xfy9326.floatpicture.Methods.ImageMethods;
@@ -701,16 +703,14 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         // X Axis Controls
         final SeekBar seekBar_x = mView.findViewById(R.id.seekbar_set_size_x);
         final EditText editText_x = mView.findViewById(R.id.edittext_set_size_x);
-        editText_x.setText(String.format("%.3f", zoom_x));
-        editText_x.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        editText_x.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        configureDecimalInput(editText_x);
+        editText_x.setText(formatZoom(zoom_x));
 
         // Y Axis Controls
         final SeekBar seekBar_y = mView.findViewById(R.id.seekbar_set_size_y);
         final EditText editText_y = mView.findViewById(R.id.edittext_set_size_y);
-        editText_y.setText(String.format("%.3f", zoom_y));
-        editText_y.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        editText_y.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        configureDecimalInput(editText_y);
+        editText_y.setText(formatZoom(zoom_y));
 
         final EditText editTextPixelWidth = mView.findViewById(R.id.edittext_pixel_width);
         final EditText editTextPixelHeight = mView.findViewById(R.id.edittext_pixel_height);
@@ -751,8 +751,8 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         Runnable refreshSizeControls = () -> {
             seekBar_x.setProgress(Math.round(zoom_x_temp * 1000));
             seekBar_y.setProgress(Math.round(zoom_y_temp * 1000));
-            editText_x.setText(String.format("%.3f", zoom_x_temp));
-            editText_y.setText(String.format("%.3f", zoom_y_temp));
+            editText_x.setText(formatZoom(zoom_x_temp));
+            editText_y.setText(formatZoom(zoom_y_temp));
             syncPixelFields.run();
             WindowsMethods.updateWindow(windowManager, floatImageView_Edit, bitmap_Edit,
                     false, allow_picture_over_layout, zoom_x_temp, zoom_y_temp,
@@ -787,9 +787,9 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
 
             if (changed) {
                 seekBar_x.setProgress((int) (zoom_x_temp * 1000));
-                editText_x.setText(String.format("%.3f", zoom_x_temp));
+                editText_x.setText(formatZoom(zoom_x_temp));
                 seekBar_y.setProgress((int) (zoom_y_temp * 1000));
-                editText_y.setText(String.format("%.3f", zoom_y_temp));
+                editText_y.setText(formatZoom(zoom_y_temp));
                 WindowsMethods.updateWindow(windowManager, floatImageView_Edit, bitmap_Edit, false, allow_picture_over_layout, zoom_x_temp, zoom_y_temp, picture_degree, position_x, position_y);
             } else {
                 // 即使值没变，也要更新 Progress 以匹配新的 Max（如果 seekbar 逻辑需要）
@@ -814,9 +814,9 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                 zoom_x_temp = zoom_y_temp;
 
                 seekBar_x.setProgress((int) (zoom_x_temp * 1000));
-                editText_x.setText(String.format("%.3f", zoom_x_temp));
+                editText_x.setText(formatZoom(zoom_x_temp));
                 seekBar_y.setProgress((int) (zoom_y_temp * 1000));
-                editText_y.setText(String.format("%.3f", zoom_y_temp));
+                editText_y.setText(formatZoom(zoom_y_temp));
 
                 syncPixelFields.run();
                 WindowsMethods.updateWindow(windowManager, floatImageView_Edit, bitmap_Edit, false, allow_picture_over_layout, zoom_x_temp, zoom_y_temp, picture_degree, position_x, position_y);
@@ -832,7 +832,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                     if (seekBar == seekBar_x) {
                         zoom_x_temp = newZoom;
 
-                        editText_x.setText(String.format("%.3f", zoom_x_temp));
+                        editText_x.setText(formatZoom(zoom_x_temp));
                         if (checkBoxLockRatio.isChecked()) {
                             // Link Y to X
                             zoom_y_temp = zoom_x_temp;
@@ -858,11 +858,11 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                             }
 
                             seekBar_y.setProgress((int)(zoom_y_temp * 1000));
-                            editText_y.setText(String.format("%.3f", zoom_y_temp));
+                            editText_y.setText(formatZoom(zoom_y_temp));
                         }
                     } else if (seekBar == seekBar_y) {
                         zoom_y_temp = newZoom;
-                        editText_y.setText(String.format("%.3f", zoom_y_temp));
+                        editText_y.setText(formatZoom(zoom_y_temp));
                         if (checkBoxLockRatio.isChecked()) {
                             zoom_x_temp = zoom_y_temp;
                             if (!allow_picture_over_layout && zoom_x_temp > absoluteMaxZoomX) {
@@ -871,7 +871,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                                 zoom_x_temp = absoluteMaxZoomX;
                             }
                             seekBar_x.setProgress((int)(zoom_x_temp * 1000));
-                            editText_x.setText(String.format("%.3f", zoom_x_temp));
+                            editText_x.setText(formatZoom(zoom_x_temp));
                         }
                     }
                     syncPixelFields.run();
@@ -894,53 +894,47 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         TextView.OnEditorActionListener editorActionListener = (v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_UNSPECIFIED) {
                 try {
-                    String input = v.getText().toString().trim();
-                    if (!input.isEmpty()) {
-                        float inputVal = Float.parseFloat(input);
-                        pixelAdjustmentActive[0] = false;
-                        float minZoom = 0.1f;
-                        if (inputVal < minZoom) inputVal = minZoom;
+                    float currentMax = checkBoxLockRatio.isChecked()
+                            ? Math.min(absoluteMaxZoomX, absoluteMaxZoomY)
+                            : (v == editText_x ? absoluteMaxZoomX : absoluteMaxZoomY);
+                    float inputVal = readZoomInput((EditText) v, currentMax);
+                    pixelAdjustmentActive[0] = false;
 
-                        // Check against specific limits
-                        float currentMax = (v == editText_x) ? absoluteMaxZoomX : absoluteMaxZoomY;
-                        if (inputVal > currentMax) inputVal = currentMax;
+                    v.setText(formatZoom(inputVal));
 
-                        v.setText(String.format("%.3f", inputVal));
+                    if (v == editText_x) {
+                        zoom_x_temp = inputVal;
+                        seekBar_x.setProgress((int) (zoom_x_temp * 1000));
 
-                        if (v == editText_x) {
-                            zoom_x_temp = inputVal;
-                            seekBar_x.setProgress((int) (zoom_x_temp * 1000));
-
-                            if (checkBoxLockRatio.isChecked()) {
-                                zoom_y_temp = zoom_x_temp;
-                                if (zoom_y_temp > absoluteMaxZoomY) zoom_y_temp = absoluteMaxZoomY;
-                                editText_y.setText(String.format("%.3f", zoom_y_temp));
-                                seekBar_y.setProgress((int) (zoom_y_temp * 1000));
-                            }
-                        } else if (v == editText_y) {
-                            zoom_y_temp = inputVal;
+                        if (checkBoxLockRatio.isChecked()) {
+                            zoom_y_temp = zoom_x_temp;
+                            if (zoom_y_temp > absoluteMaxZoomY) zoom_y_temp = absoluteMaxZoomY;
+                            editText_y.setText(formatZoom(zoom_y_temp));
                             seekBar_y.setProgress((int) (zoom_y_temp * 1000));
-
-                            if (checkBoxLockRatio.isChecked()) {
-                                zoom_x_temp = zoom_y_temp;
-                                if (zoom_x_temp > absoluteMaxZoomX) zoom_x_temp = absoluteMaxZoomX;
-                                editText_x.setText(String.format("%.3f", zoom_x_temp));
-                                seekBar_x.setProgress((int) (zoom_x_temp * 1000));
-                            }
                         }
+                    } else if (v == editText_y) {
+                        zoom_y_temp = inputVal;
+                        seekBar_y.setProgress((int) (zoom_y_temp * 1000));
 
-                        syncPixelFields.run();
-                        WindowsMethods.updateWindow(windowManager, floatImageView_Edit, bitmap_Edit,
-                                false, allow_picture_over_layout, zoom_x_temp, zoom_y_temp, picture_degree,
-                                position_x, position_y);
-
-                        InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        if (imm != null) imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                        v.clearFocus();
-                        return true;
+                        if (checkBoxLockRatio.isChecked()) {
+                            zoom_x_temp = zoom_y_temp;
+                            if (zoom_x_temp > absoluteMaxZoomX) zoom_x_temp = absoluteMaxZoomX;
+                            editText_x.setText(formatZoom(zoom_x_temp));
+                            seekBar_x.setProgress((int) (zoom_x_temp * 1000));
+                        }
                     }
+
+                    syncPixelFields.run();
+                    WindowsMethods.updateWindow(windowManager, floatImageView_Edit, bitmap_Edit,
+                            false, allow_picture_over_layout, zoom_x_temp, zoom_y_temp, picture_degree,
+                            position_x, position_y);
+
+                    InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    v.clearFocus();
+                    return true;
                 } catch (NumberFormatException e) {
-                    Toast.makeText(getActivity(), R.string.settings_picture_size_warn, Toast.LENGTH_SHORT).show();
+                    return true; // The input field already explains the invalid value.
                 }
             }
             return false;
@@ -991,32 +985,8 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         buttonPixelHeightMinus.setOnClickListener(pixelStepListener);
         buttonPixelHeightPlus.setOnClickListener(pixelStepListener);
 
-        dialog.setPositiveButton(R.string.done, (__, which) -> {
-            // 【新增/修改】：在保存前，强制从 EditText 获取最新值
-            try {
-                if (pixelAdjustmentActive[0]) {
-                    EditText activePixelField = lastPixelAdjustmentWasWidth[0]
-                            ? editTextPixelWidth : editTextPixelHeight;
-                    int targetPixels = Integer.parseInt(activePixelField.getText().toString().trim());
-                    if (targetPixels > 0) {
-                        applyRenderedPixelSize(lastPixelAdjustmentWasWidth[0], targetPixels,
-                                checkBoxLockRatio.isChecked(), absoluteMaxZoomX, absoluteMaxZoomY);
-                    }
-                } else {
-                    String inputX = editText_x.getText().toString().trim();
-                    String inputY = editText_y.getText().toString().trim();
-                    if (!inputX.isEmpty()) zoom_x_temp = Float.parseFloat(inputX);
-                    if (!inputY.isEmpty()) zoom_y_temp = Float.parseFloat(inputY);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            zoom_x = zoom_x_temp;
-            zoom_y = zoom_y_temp;
-            onSuccessEditPicture(floatImageView_Edit, bitmap_Edit);
-        });
-
+        // Install the click handler after showing, so invalid input cannot close the dialog.
+        dialog.setPositiveButton(R.string.done, null);
         dialog.setNegativeButton(R.string.cancel, (__, which) -> onFailedEditPicture(floatImageView_Edit, bitmap_Edit));
         dialog.setView(mView);
         AlertDialog alertDialog = dialog.create();
@@ -1026,6 +996,41 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             alertDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
         }
         showTranslucentAdjustmentDialog(alertDialog);
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(unused -> {
+            try {
+                if (pixelAdjustmentActive[0]) {
+                    EditText activePixelField = lastPixelAdjustmentWasWidth[0]
+                            ? editTextPixelWidth : editTextPixelHeight;
+                    int targetPixels = Integer.parseInt(activePixelField.getText().toString().trim());
+                    if (targetPixels <= 0) throw new NumberFormatException();
+                    applyRenderedPixelSize(lastPixelAdjustmentWasWidth[0], targetPixels,
+                            checkBoxLockRatio.isChecked(), absoluteMaxZoomX, absoluteMaxZoomY);
+                } else {
+                    // Validate both axes before changing either value.
+                    float inputX = readZoomInput(editText_x, absoluteMaxZoomX);
+                    float inputY = readZoomInput(editText_y, absoluteMaxZoomY);
+                    if (checkBoxLockRatio.isChecked()) {
+                        float linked = Math.min(editText_y.hasFocus() ? inputY : inputX,
+                                Math.min(absoluteMaxZoomX, absoluteMaxZoomY));
+                        inputX = linked;
+                        inputY = linked;
+                    }
+                    zoom_x_temp = inputX;
+                    zoom_y_temp = inputY;
+                }
+            } catch (NumberFormatException e) {
+                if (pixelAdjustmentActive[0]) {
+                    (lastPixelAdjustmentWasWidth[0] ? editTextPixelWidth : editTextPixelHeight)
+                            .setError(getString(R.string.settings_picture_resize_warn));
+                }
+                return;
+            }
+
+            zoom_x = zoom_x_temp;
+            zoom_y = zoom_y_temp;
+            onSuccessEditPicture(floatImageView_Edit, bitmap_Edit);
+            alertDialog.dismiss();
+        });
     }
 
     private int getRenderedPixelWidth(float zoomX, float zoomY) {
@@ -1169,6 +1174,8 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         showTranslucentAdjustmentDialog(alertDialog);
     }
     private void applyRotationInput(EditText v, SeekBar seekBar) {
+        // Losing focus while the dialog closes must not update its released preview.
+        if (!onUseEditPicture) return;
         try {
             String input;
             input = v.getText().toString().trim();
@@ -1194,6 +1201,57 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         }
     }
 
+    private static void configureDecimalInput(EditText input) {
+        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL
+                | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance();
+        StringBuilder accepted = new StringBuilder("0123456789.,+-");
+        accepted.append(symbols.getDecimalSeparator());
+        for (int i = 0; i < 10; i++) accepted.append((char) (symbols.getZeroDigit() + i));
+        input.setKeyListener(DigitsKeyListener.getInstance(accepted.toString()));
+        input.setImeOptions(EditorInfo.IME_ACTION_DONE);
+    }
+
+    private static float parseDecimalInput(String input) {
+        // These fields never use grouping separators. Accept dot/comma decimal keyboards
+        // and localized digits, but reject empty, partial and non-finite numbers.
+        char decimal = DecimalFormatSymbols.getInstance().getDecimalSeparator();
+        StringBuilder normalized = new StringBuilder();
+        String trimmed = input.trim();
+        for (int i = 0; i < trimmed.length(); i++) {
+            char character = trimmed.charAt(i);
+            int digit = Character.digit(character, 10);
+            normalized.append(digit >= 0 ? (char) ('0' + digit)
+                    : (character == ',' || character == '\u066b' || character == decimal ? '.' : character));
+        }
+        String number = normalized.toString();
+        if (!number.matches("[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)")) {
+            throw new NumberFormatException("Invalid decimal input");
+        }
+        float value = Float.parseFloat(number);
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
+            throw new NumberFormatException("Non-finite decimal input");
+        }
+        return value;
+    }
+
+    private float readZoomInput(EditText input, float maximum) {
+        try {
+            float value = parseDecimalInput(input.getText().toString());
+            if (value <= 0) throw new NumberFormatException();
+            input.setError(null);
+            return Math.min(maximum, Math.max(0.1f, value));
+        } catch (NumberFormatException exception) {
+            input.setError(getString(R.string.settings_picture_size_warn));
+            throw exception;
+        }
+    }
+
+    private static String formatZoom(float zoom) {
+        // Keep values generated by the app stable regardless of the system locale.
+        return String.format(Locale.US, "%.3f", zoom);
+    }
+
     private static String formatDegree(float degree) {
         return String.format(Locale.US, "%.2f", Math.round(degree * 100f) / 100f);
     }
@@ -1208,12 +1266,15 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         seekBar.setMax(100);
         seekBar.setProgress((int) (picture_alpha * 100));
         final EditText editText = mView.findViewById(R.id.edittext_set_size);
+        configureDecimalInput(editText);
         editText.setText(String.valueOf(picture_alpha));
         picture_alpha_temp = picture_alpha;
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) return; // Do not round a typed decimal to the slider's steps.
                 picture_alpha_temp = ((float) progress) / 100;
+                editText.setError(null);
                 editText.setText(String.valueOf(picture_alpha_temp));
                 floatImageView.setAlpha(picture_alpha_temp);
                 WindowsMethods.updateWindow(windowManager, floatImageView, false, allow_picture_over_layout, position_x, position_y);
@@ -1229,32 +1290,13 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             }
         });
         editText.setOnEditorActionListener((v, actionId, event) -> {
-            float edittext_temp = Float.parseFloat(v.getText().toString());
-            if (edittext_temp >= 0 && edittext_temp <= 100) {
-                picture_alpha_temp = edittext_temp;
-                seekBar.setProgress((int) (picture_alpha_temp * 100));
-                floatImageView.setAlpha(picture_alpha_temp);
-                WindowsMethods.updateWindow(windowManager, floatImageView, false, allow_picture_over_layout, position_x, position_y);
-                syncPositionToView(floatImageView, position_x, position_y);
-            } else {
-                Toast.makeText(getActivity(), R.string.settings_number_warn, Toast.LENGTH_SHORT).show();
+            if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_UNSPECIFIED) {
+                applyAlphaInput(editText, seekBar);
+                return true;
             }
             return false;
         });
-        dialog.setPositiveButton(R.string.done, (__, which) -> {
-            // 【新增】：手动从输入框提取一次
-            try {
-                String input = editText.getText().toString().trim();
-                if (!input.isEmpty()) {
-                    picture_alpha_temp = Float.parseFloat(input);
-                }
-            } catch (Exception e) { }
-
-            picture_alpha = picture_alpha_temp;
-            floatImageView.setAlpha(picture_alpha);
-            WindowsMethods.updateWindow(windowManager, floatImageView, false, allow_picture_over_layout, position_x, position_y);
-            syncPositionToView(floatImageView, position_x, position_y);
-        });
+        dialog.setPositiveButton(R.string.done, null);
         dialog.setNegativeButton(R.string.cancel, (__, which) -> {
             floatImageView.setAlpha(picture_alpha);
             WindowsMethods.updateWindow(windowManager, floatImageView, false, allow_picture_over_layout, position_x, position_y);
@@ -1268,6 +1310,31 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             alertDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
         }
         showTranslucentAdjustmentDialog(alertDialog);
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(unused -> {
+            if (applyAlphaInput(editText, seekBar)) {
+                picture_alpha = picture_alpha_temp;
+                alertDialog.dismiss();
+            }
+        });
+    }
+
+    private boolean applyAlphaInput(EditText input, SeekBar seekBar) {
+        final float value;
+        try {
+            value = parseDecimalInput(input.getText().toString());
+            if (value < 0f || value > 1f) throw new NumberFormatException();
+        } catch (NumberFormatException exception) {
+            input.setError(getString(R.string.settings_picture_alpha_warn));
+            return false;
+        }
+        input.setError(null);
+        picture_alpha_temp = value;
+        seekBar.setProgress(Math.round(value * 100));
+        floatImageView.setAlpha(value);
+        WindowsMethods.updateWindow(windowManager, floatImageView, false,
+                allow_picture_over_layout, position_x, position_y);
+        syncPositionToView(floatImageView, position_x, position_y);
+        return true;
     }
 
     private void syncPositionToView(FloatImageView view, int x, int y) {
@@ -1471,7 +1538,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
 
     private void onEditPicture(FloatImageView FloatImageView_Edit) {
         if (!onUseEditPicture) {
-            windowManager.removeView(floatImageView);
+            windowManager.removeViewImmediate(floatImageView);
             floatImageView.refreshDrawableState();
             WindowsMethods.createWindow(windowManager, FloatImageView_Edit, false,
                     allow_picture_over_layout, position_x, position_y);
@@ -1495,24 +1562,24 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
 
     private void onSuccessEditPicture(FloatImageView floatImageView_Edit, Bitmap bitmap_Edit) {
         if (onUseEditPicture) {
-            windowManager.removeView(floatImageView_Edit);
+            onUseEditPicture = false;
+            windowManager.removeViewImmediate(floatImageView_Edit);
             floatImageView_Edit.refreshDrawableState();
             bitmap_Edit.recycle();
             floatImageView.configureGestureImage(bitmap, zoom_x, zoom_y, picture_degree);
             WindowsMethods.createWindow(windowManager, floatImageView, false, allow_picture_over_layout, position_x, position_y);
             syncPositionToView(floatImageView, position_x, position_y);
-            onUseEditPicture = false;
         }
     }
 
     private void onFailedEditPicture(FloatImageView floatImageView_Edit, Bitmap bitmap_Edit) {
         if (onUseEditPicture) {
-            windowManager.removeView(floatImageView_Edit);
+            onUseEditPicture = false;
+            windowManager.removeViewImmediate(floatImageView_Edit);
             floatImageView_Edit.refreshDrawableState();
             bitmap_Edit.recycle();
             WindowsMethods.createWindow(windowManager, floatImageView, false, allow_picture_over_layout, position_x, position_y);
             syncPositionToView(floatImageView, position_x, position_y);
-            onUseEditPicture = false;
         }
     }
 

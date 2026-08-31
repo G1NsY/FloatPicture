@@ -67,6 +67,15 @@
         </activity>
 
         <activity
+            android:name=".Activities.SupportActivity"
+            android:exported="false"
+            android:label="@string/support_development">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activities.MainActivity" />
+        </activity>
+
+        <activity
             android:name=".Activities.PrivacyPolicyActivity"
             android:label="@string/privacy_policy"
             tools:ignore="InnerclassSeparator">

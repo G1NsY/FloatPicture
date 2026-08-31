@@ -197,7 +197,10 @@ final class FloatingControlManager {
         params.width = width;
         params.height = height;
         params.windowAnimations = 0;
-        params.screenOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LOCKED;
+        // The controller must not request a display orientation: on some devices an
+        // application overlay with LOCKED also forces the foreground app to stay portrait.
+        // The picture overlay keeps its own orientation policy in WindowsMethods.
+        params.screenOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             params.alpha = ((MainApplication) context.getApplicationContext())
                     .getSafeWindowsAlpha();

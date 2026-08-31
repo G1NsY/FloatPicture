@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FloatPicture</string>
+    <string name="app_name">FloatPicture 2</string>
     <string name="done">Done</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
@@ -67,6 +67,23 @@
     <string name="back_to_launcher">Only back to launcher</string>
     <string name="exit_application">Exit</string>
     <string name="about">About</string>
+    <string name="support_development">Support development</string>
+    <string name="support_heading">Support FloatPicture 2</string>
+    <string name="support_intro">Maintained and improved by G1NsY. Thank you for making FloatPicture 2 part of your creative workflow.</string>
+    <string name="support_afdian_title">Support via Afdian</string>
+    <string name="support_optional_message">If FloatPicture 2 helps you, you can voluntarily support its continued development and maintenance. Give only what you are comfortable with.\n\nSupport does not unlock extra features, exclusive content or services. All app features work the same whether or not you contribute.</string>
+    <string name="support_open_afdian">Open G1NsY on Afdian</string>
+    <string name="support_copy_link">Copy support link</string>
+    <string name="support_link_copied">Support link copied</string>
+    <string name="support_payment_note">Opens an external website. Check the amount, payment period, renewal terms and fees on Afdian before paying. FloatPicture 2 does not process payments or receive your payment credentials.</string>
+    <string name="support_leave_title">Open Afdian?</string>
+    <string name="support_leave_message">You will leave FloatPicture 2 and open G1NsY’s page on afdian.com. Its privacy policy and payment terms apply. No pictures or picture settings will be sent.</string>
+    <string name="support_continue">Continue</string>
+    <string name="support_cannot_open_title">Unable to open the link</string>
+    <string name="support_cannot_open_message">No available app could open this page. You can copy the link and open it in a browser yourself.</string>
+    <string name="support_other_ways_title">Every contribution matters</string>
+    <string name="support_other_ways_message">Sharing the app with people who need it, describing problems clearly, and suggesting improvements also help the project grow.\n\nYou never need to pay to use the app’s features.</string>
+    <string name="support_thanks">Thank you for your encouragement and support.</string>
     <string name="application_version">Version:</string>
     <string name="author">XFY9326(ClareX)</string>
     <string name="website">https://github.com/G1NsY/FloatPicture2</string>
@@ -77,7 +94,7 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="privacy_contact_url">https://github.com/G1NsY/FloatPicture2/issues</string>
     <string name="privacy_acknowledgement_title">Before you continue</string>
-    <string name="privacy_acknowledgement_message">FloatPicture processes the pictures you choose only on this device. It needs overlay permission to show floating pictures and may use notifications for the optional control panel. Please review the privacy policy before continuing.</string>
+    <string name="privacy_acknowledgement_message">FloatPicture 2 processes the pictures you choose only on this device. It needs overlay permission to show floating pictures and may use notifications for the optional control panel. Please review the privacy policy before continuing.</string>
     <string name="privacy_agree_and_continue">Agree and continue</string>
     <string name="view_privacy_policy">View privacy policy</string>
     <string name="copyright">Original work Copyright © 2017 XFY9326.\nModifications Copyright © 2026 G1NsY.\nLicensed under GNU GPL v3 or later.</string>
@@ -107,6 +124,7 @@
     <string name="error_picture_not_found">Can\'t find picture temp!</string>
     <string name="settings_picture_alpha">Transparency</string>
     <string name="settings_picture_alpha_sum">Have transparent effects for regular pictures.</string>
+    <string name="settings_picture_alpha_warn">Enter a number from 0 to 1.</string>
     <string name="transparency">Transparency:</string>
     <string name="settings_number_warn">Please input a correct number!</string>
     <string name="settings_picture_degree">Angle</string>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">悬浮图片</string>
+    <string name="app_name">悬浮图片2</string>
     <string name="adapter_image_description">图片预览</string>
     <string name="drag_to_reorder">长按并拖动以调整图片顺序</string>
     <string name="done">确认</string>
@@ -69,6 +69,23 @@
     <string name="back_to_launcher">仅返回桌面</string>
     <string name="application_version">版本：</string>
     <string name="about">关于</string>
+    <string name="support_development">支持开发</string>
+    <string name="support_heading">支持悬浮图片2</string>
+    <string name="support_intro">由 G1NsY 持续维护和改进。感谢你让悬浮图片2成为创作过程中的小帮手。</string>
+    <string name="support_afdian_title">通过爱发电支持</string>
+    <string name="support_optional_message">如果悬浮图片2对你有帮助，欢迎自愿支持后续开发与维护。金额随心，请量力而行。\n\n支持不提供额外功能、专属内容或服务，是否支持都不影响应用功能和使用体验。</string>
+    <string name="support_open_afdian">前往 G1NsY 的爱发电主页</string>
+    <string name="support_copy_link">复制支持链接</string>
+    <string name="support_link_copied">支持链接已复制</string>
+    <string name="support_payment_note">将打开外部网站。支付前请在爱发电确认金额、支付周期、续费条款和费用。悬浮图片2不处理付款，也不会接收你的支付凭据。</string>
+    <string name="support_leave_title">前往爱发电？</string>
+    <string name="support_leave_message">你将离开悬浮图片2，打开 afdian.com 上 G1NsY 的主页。后续操作适用该平台的隐私政策及支付条款，不会向其发送图片或图片设置。</string>
+    <string name="support_continue">继续前往</string>
+    <string name="support_cannot_open_title">无法打开链接</string>
+    <string name="support_cannot_open_message">没有可用的应用能够打开此页面。你可以复制链接后，自行在浏览器中打开。</string>
+    <string name="support_other_ways_title">每一份帮助都很重要</string>
+    <string name="support_other_ways_message">把应用分享给需要的人、清楚地描述使用中遇到的问题、提出改进建议，也是在帮助项目成长。\n\n使用应用功能不需要付费。</string>
+    <string name="support_thanks">感谢你的鼓励与支持。</string>
     <string name="author">XFY9326(逸雪飞扬)</string>
     <string name="website">https://github.com/G1NsY/FloatPicture2</string>
     <string name="application_author">原作者：</string>
@@ -78,7 +95,7 @@
     <string name="privacy_policy">隐私政策</string>
     <string name="privacy_contact_url">https://github.com/G1NsY/FloatPicture2/issues</string>
     <string name="privacy_acknowledgement_title">使用前说明</string>
-    <string name="privacy_acknowledgement_message">悬浮图片只会在本机处理你主动选择的图片。应用需要悬浮窗权限来显示图片，并可能使用通知显示可选的控制面板。请在继续前阅读隐私政策。</string>
+    <string name="privacy_acknowledgement_message">悬浮图片2只会在本机处理你主动选择的图片。应用需要悬浮窗权限来显示图片，并可能使用通知显示可选的控制面板。请在继续前阅读隐私政策。</string>
     <string name="privacy_agree_and_continue">同意并继续</string>
     <string name="view_privacy_policy">查看隐私政策</string>
     <string name="copyright">原始作品版权所有 © 2017 XFY9326\n修改部分版权所有 © 2026 G1NsY\n基于 GNU GPL v3 或更高版本授权</string>
@@ -108,6 +125,7 @@
     <string name="error_picture_not_found">无法找到图片缓存！</string>
     <string name="settings_picture_alpha">透明度</string>
     <string name="settings_picture_alpha_sum">使普通的图片拥有透明效果</string>
+    <string name="settings_picture_alpha_warn">请输入 0 到 1 之间的数字。</string>
     <string name="transparency">透明度：</string>
     <string name="settings_number_warn">请输入一个正确的数字！</string>
     <string name="settings_picture_degree">角度</string>

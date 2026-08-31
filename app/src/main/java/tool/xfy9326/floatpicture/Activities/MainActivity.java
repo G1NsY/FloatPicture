@@ -193,6 +193,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, PrivacyPolicyActivity.class));
             } else if (itemId == R.id.menu_about) {
                 startActivity(new Intent(MainActivity.this, AboutActivity.class));
+            } else if (itemId == R.id.menu_support) {
+                startActivity(new Intent(MainActivity.this, SupportActivity.class));
             } else if (itemId == R.id.menu_back_to_launcher) {
                 MainActivity.this.moveTaskToBack(true);
             } else if (itemId == R.id.menu_exit) {

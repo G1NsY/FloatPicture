@@ -145,6 +145,11 @@ public class ManageMethods {
                 pictureData.setDataControl(id);
                 if (pictureData.getBoolean(Config.DATA_PICTURE_SHOW_ENABLED, Config.DATA_DEFAULT_PICTURE_SHOW_ENABLED)) {
                     FloatImageView floatImageView = (FloatImageView) entry.getValue();
+                    // Adjustment dialogs temporarily replace the registered picture
+                    // with a preview window. Do not update the detached original.
+                    if (!floatImageView.isAttachedToWindow()) {
+                        continue;
+                    }
                     boolean over_layout = resolvePictureOverLayout(mContext);
                     boolean isMoveable = global_touchable;
                     boolean isScalable = global_touchable;
@@ -633,7 +638,10 @@ public class ManageMethods {
     private static void removeWindowIfAttached(WindowManager windowManager, FloatImageView floatImageView) {
         if (floatImageView.isAttachedToWindow()) {
             try {
-                windowManager.removeView(floatImageView);
+                // Callers can show this same view again in the current UI event
+                // (single-picture editing/switching). Deferred removal would make
+                // showWindowById update a window that is still about to disappear.
+                windowManager.removeViewImmediate(floatImageView);
             } catch (IllegalArgumentException ignored) {
                 // The window may already have been removed by a concurrent lifecycle callback.
             }
