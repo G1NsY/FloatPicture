@@ -4,12 +4,16 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -22,6 +26,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,10 +48,12 @@ import tool.xfy9326.floatpicture.View.RotationDialView;
 
 /** Owns the small, draggable overlay used to control the selected picture. */
 final class FloatingControlManager {
+    private static final int HIGHLIGHT_BLUE = 0xFF40C4FF;
     private static final int COLLAPSED_SIZE_DP = 44;
     private static final int PRECISION_CONTROL_NONE = 0;
     private static final int PRECISION_CONTROL_DIRECTION = 1;
     private static final int PRECISION_CONTROL_ROTATION = 2;
+    private static final int PRECISION_CONTROL_TRANSPARENCY = 3;
     private static final int EXPANDED_HEIGHT_DP = 248;
     private static final int EXPANDED_PRECISION_HEIGHT_DP = 424;
 
@@ -63,6 +70,9 @@ final class FloatingControlManager {
     private ImageButton rotationButton;
     private ImageButton overflowButton;
     private ImageButton directionPadButton;
+    private ImageButton transparencyButton;
+    private TextView transparencyLabel;
+    private SeekBar transparencySeekBar;
     private RotationDialView rotationDialView;
     private Bitmap collapsedIconBitmap;
     private boolean expanded;
@@ -87,6 +97,7 @@ final class FloatingControlManager {
         boolean shouldShow = preferences.getBoolean(
                 Config.PREFERENCE_SHOW_FLOATING_CONTROL, true);
         if (shouldShow && PermissionMethods.canDrawOverlays(context)) {
+            ManageMethods.ensureWindowsInitialized(context);
             show();
         } else {
             remove();
@@ -98,6 +109,7 @@ final class FloatingControlManager {
         if (rotationDialView != null) {
             rotationDialView.setAngle(ManageMethods.getCurrentPictureDegree(context));
         }
+        updateTransparencyControl();
         if (statusView == null) {
             return;
         }
@@ -180,6 +192,9 @@ final class FloatingControlManager {
         rotationButton = null;
         overflowButton = null;
         directionPadButton = null;
+        transparencyButton = null;
+        transparencyLabel = null;
+        transparencySeekBar = null;
         rotationDialView = null;
         expanded = false;
         precisionControlMode = PRECISION_CONTROL_NONE;
@@ -211,6 +226,9 @@ final class FloatingControlManager {
     private void buildCollapsedView() {
         expanded = false;
         precisionControlMode = PRECISION_CONTROL_NONE;
+        transparencyButton = null;
+        transparencyLabel = null;
+        transparencySeekBar = null;
         rotationDialView = null;
         root.removeAllViews();
         root.setPadding(0, 0, 0, 0);
@@ -247,6 +265,9 @@ final class FloatingControlManager {
         rotationButton = null;
         overflowButton = null;
         directionPadButton = null;
+        transparencyButton = null;
+        transparencyLabel = null;
+        transparencySeekBar = null;
         rotationDialView = null;
         root.removeAllViews();
         root.setOnTouchListener(null);
@@ -348,6 +369,11 @@ final class FloatingControlManager {
                 R.drawable.ic_picture_move_dpad, R.string.floating_control_direction_toggle);
         directionPadButton.setOnClickListener(view -> toggleDirectionPad());
         gestureActionRow.addView(directionPadButton, weightedButtonParams());
+        transparencyButton = imageButton(
+                R.drawable.ic_picture_opacity,
+                R.string.floating_control_transparency_toggle);
+        transparencyButton.setOnClickListener(view -> toggleTransparencyControl());
+        gestureActionRow.addView(transparencyButton, weightedButtonParams());
         ImageButton save = imageButton(
                 R.drawable.ic_gesture_save, R.string.floating_control_save_gesture);
         save.setOnClickListener(view -> {
@@ -370,9 +396,95 @@ final class FloatingControlManager {
             addCircularDirectionPad();
         } else if (precisionControlMode == PRECISION_CONTROL_ROTATION) {
             addRotationDial();
+        } else if (precisionControlMode == PRECISION_CONTROL_TRANSPARENCY) {
+            addTransparencyControl();
         }
         refreshGestureToggleButtons();
         refreshState();
+    }
+
+    private void addTransparencyControl() {
+        LinearLayout transparencyRow = row();
+        transparencyLabel = label("", 13);
+        transparencyLabel.setTextColor(Color.WHITE);
+        transparencyLabel.setGravity(Gravity.CENTER);
+        transparencyRow.addView(transparencyLabel,
+                new LinearLayout.LayoutParams(dp(82), dp(48)));
+
+        transparencySeekBar = new SeekBar(context);
+        transparencySeekBar.setMax(100);
+        tintTransparencySeekBar(transparencySeekBar);
+        transparencySeekBar.setContentDescription(
+                context.getString(R.string.settings_picture_alpha));
+        transparencySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
+                updateTransparencyLabel(progress);
+                ManageMethods.setCurrentPictureAlpha(context, progress / 100f);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        LinearLayout.LayoutParams seekBarParams =
+                new LinearLayout.LayoutParams(0, dp(48), 1f);
+        seekBarParams.setMargins(dp(2), 0, dp(2), 0);
+        transparencyRow.addView(transparencySeekBar, seekBarParams);
+        root.addView(transparencyRow);
+    }
+
+    private void tintTransparencySeekBar(SeekBar seekBar) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            seekBar.setProgressTintList(ColorStateList.valueOf(HIGHLIGHT_BLUE));
+            seekBar.setThumbTintList(ColorStateList.valueOf(HIGHLIGHT_BLUE));
+            return;
+        }
+        Drawable progressDrawable = seekBar.getProgressDrawable();
+        if (progressDrawable instanceof LayerDrawable) {
+            Drawable progress = ((LayerDrawable) progressDrawable)
+                    .findDrawableByLayerId(android.R.id.progress);
+            if (progress != null) {
+                progress.setColorFilter(HIGHLIGHT_BLUE, PorterDuff.Mode.SRC_IN);
+            }
+        }
+        Drawable thumb = seekBar.getThumb();
+        if (thumb != null) {
+            thumb.setColorFilter(HIGHLIGHT_BLUE, PorterDuff.Mode.SRC_IN);
+        }
+    }
+
+    private void updateTransparencyControl() {
+        if (transparencyLabel == null || transparencySeekBar == null) {
+            return;
+        }
+        String currentId = ((MainApplication) context.getApplicationContext())
+                .getCurrentPictureId();
+        boolean hasPicture = currentId != null
+                && new PictureData().getListArray().containsKey(currentId);
+        transparencySeekBar.setEnabled(hasPicture);
+        if (!hasPicture) {
+            transparencyLabel.setText(R.string.floating_control_transparency_unavailable);
+            transparencySeekBar.setProgress(0);
+            return;
+        }
+        int progress = Math.round(ManageMethods.getCurrentPictureAlpha(context) * 100f);
+        transparencySeekBar.setProgress(progress);
+        updateTransparencyLabel(progress);
+    }
+
+    private void updateTransparencyLabel(int progress) {
+        if (transparencyLabel != null) {
+            transparencyLabel.setText(context.getString(
+                    R.string.floating_control_transparency, progress));
+        }
     }
 
     private void addCircularDirectionPad() {
@@ -447,13 +559,21 @@ final class FloatingControlManager {
     }
 
     private void toggleDirectionPad() {
-        if (precisionControlMode == PRECISION_CONTROL_NONE) {
-            precisionControlMode = PRECISION_CONTROL_DIRECTION;
-        } else if (precisionControlMode == PRECISION_CONTROL_DIRECTION) {
+        if (precisionControlMode == PRECISION_CONTROL_DIRECTION) {
             precisionControlMode = PRECISION_CONTROL_ROTATION;
-        } else {
+        } else if (precisionControlMode == PRECISION_CONTROL_ROTATION) {
             precisionControlMode = PRECISION_CONTROL_NONE;
+        } else {
+            precisionControlMode = PRECISION_CONTROL_DIRECTION;
         }
+        buildExpandedView();
+        updateExpandedWindowLayout();
+    }
+
+    private void toggleTransparencyControl() {
+        precisionControlMode = precisionControlMode == PRECISION_CONTROL_TRANSPARENCY
+                ? PRECISION_CONTROL_NONE
+                : PRECISION_CONTROL_TRANSPARENCY;
         buildExpandedView();
         updateExpandedWindowLayout();
     }
@@ -487,17 +607,14 @@ final class FloatingControlManager {
         visibilityButton.setImageResource(
                 visible ? R.drawable.ic_visible : R.drawable.ic_invisible);
         visibilityButton.setColorFilter(
-                visible ? Color.rgb(64, 196, 255) : Color.WHITE);
+                visible ? HIGHLIGHT_BLUE : Color.WHITE);
         visibilityButton.setAlpha(1f);
     }
 
     private void toggleGestureControl() {
         boolean enabled = !preferences.getBoolean(
                 Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
-        preferences.edit()
-                .putBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, enabled)
-                .apply();
-        ManageMethods.updateAllWindowsGestureState(context, true);
+        ManageMethods.setMoveAndScaleGestureEnabled(context, enabled);
         refreshGestureToggleButtons();
         bringControlToFront();
     }
@@ -510,12 +627,8 @@ final class FloatingControlManager {
     }
 
     private void toggleOverflowControl() {
-        boolean enabled = !preferences.getBoolean(
-                Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN, false);
-        preferences.edit()
-                .putBoolean(Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN, enabled)
-                .apply();
-        ManageMethods.updateAllWindowsGestureState(context, true);
+        boolean enabled = !ManageMethods.isCurrentPictureOverLayout(context);
+        ManageMethods.setCurrentPictureOverLayout(context, enabled);
         refreshGestureToggleButtons();
         bringControlToFront();
     }
@@ -532,8 +645,7 @@ final class FloatingControlManager {
                     : R.drawable.ic_gesture_rotate_locked);
         }
         applyToggleState(rotationButton, rotationUnlocked);
-        boolean overflowEnabled = preferences.getBoolean(
-                Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN, false);
+        boolean overflowEnabled = ManageMethods.isCurrentPictureOverLayout(context);
         if (overflowButton != null) {
             overflowButton.setImageResource(overflowEnabled
                     ? R.drawable.ic_picture_overflow_on
@@ -547,14 +659,19 @@ final class FloatingControlManager {
                             : R.drawable.ic_picture_move_dpad);
         }
         applyToggleState(
-                directionPadButton, precisionControlMode != PRECISION_CONTROL_NONE);
+                directionPadButton,
+                precisionControlMode == PRECISION_CONTROL_DIRECTION
+                        || precisionControlMode == PRECISION_CONTROL_ROTATION);
+        applyToggleState(
+                transparencyButton,
+                precisionControlMode == PRECISION_CONTROL_TRANSPARENCY);
     }
 
     private void applyToggleState(ImageButton button, boolean enabled) {
         if (button == null) {
             return;
         }
-        button.setColorFilter(enabled ? Color.rgb(64, 196, 255) : Color.LTGRAY);
+        button.setColorFilter(enabled ? HIGHLIGHT_BLUE : Color.LTGRAY);
         button.setAlpha(enabled ? 1f : 0.58f);
     }
 
@@ -879,9 +996,11 @@ final class FloatingControlManager {
     }
 
     private int expandedEstimatedHeightDp() {
+        if (precisionControlMode == PRECISION_CONTROL_TRANSPARENCY) {
+            return EXPANDED_HEIGHT_DP + 48;
+        }
         return precisionControlMode == PRECISION_CONTROL_NONE
-                ? EXPANDED_HEIGHT_DP
-                : EXPANDED_PRECISION_HEIGHT_DP;
+                ? EXPANDED_HEIGHT_DP : EXPANDED_PRECISION_HEIGHT_DP;
     }
 
     private GradientDrawable roundedDrawable(int color, int radius) {

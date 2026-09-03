@@ -4,7 +4,9 @@ package tool.xfy9326.floatpicture.Methods;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.os.Build;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +25,10 @@ public class WindowsMethods {
     public static void createWindow(WindowManager windowManager, View pictureView, boolean touchable, boolean overLayout, int layoutPositionX, int layoutPositionY) {
         WindowManager.LayoutParams layoutParams = getDefaultLayout(pictureView.getContext(), layoutPositionX, layoutPositionY, touchable, overLayout);
         applyRenderedImageSize(pictureView, layoutParams);
+        if (!overLayout) {
+            constrainPositionToScreen(pictureView.getContext(), pictureView, layoutParams);
+        }
+        syncWindowPosition(pictureView, layoutParams);
         windowManager.addView(pictureView, layoutParams);
     }
 
@@ -33,10 +39,9 @@ public class WindowsMethods {
         } else {
             layoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
         }
-        layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        if (overLayout) {
-            layoutParams.flags = layoutParams.flags | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
-        }
+        layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
         if (!touchable) {
             layoutParams.flags = layoutParams.flags | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         }
@@ -57,6 +62,10 @@ public class WindowsMethods {
     public static void updateWindow(WindowManager windowManager, FloatImageView pictureView, boolean touchable, boolean overLayout, int layoutPositionX, int layoutPositionY) {
         WindowManager.LayoutParams layoutParams = getDefaultLayout(pictureView.getContext(), layoutPositionX, layoutPositionY, touchable, overLayout);
         applyRenderedImageSize(pictureView, layoutParams);
+        if (!overLayout) {
+            constrainPositionToScreen(pictureView.getContext(), pictureView, layoutParams);
+        }
+        syncWindowPosition(pictureView, layoutParams);
         windowManager.updateViewLayout(pictureView, layoutParams);
     }
 
@@ -77,6 +86,49 @@ public class WindowsMethods {
         if (currentParams != null && currentParams.width > 0 && currentParams.height > 0) {
             targetParams.width = currentParams.width;
             targetParams.height = currentParams.height;
+        }
+    }
+
+    /**
+     * Keeps a window within the display while preserving the same full-screen
+     * coordinate space used when overflow is enabled. Oversized windows can
+     * still be panned between their two edges because they cannot fully fit.
+     */
+    public static void constrainPositionToScreen(
+            Context context, View pictureView, WindowManager.LayoutParams layoutParams) {
+        int windowWidth = layoutParams.width > 0
+                ? layoutParams.width : Math.max(1, pictureView.getWidth());
+        int windowHeight = layoutParams.height > 0
+                ? layoutParams.height : Math.max(1, pictureView.getHeight());
+        int screenWidth;
+        int screenHeight;
+        WindowManager windowManager = getWindowManager(context);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Rect bounds = windowManager.getCurrentWindowMetrics().getBounds();
+            screenWidth = bounds.width();
+            screenHeight = bounds.height();
+        } else {
+            DisplayMetrics metrics = new DisplayMetrics();
+            windowManager.getDefaultDisplay().getRealMetrics(metrics);
+            screenWidth = metrics.widthPixels;
+            screenHeight = metrics.heightPixels;
+        }
+        layoutParams.x = clampWindowCoordinate(
+                layoutParams.x, screenWidth, windowWidth);
+        layoutParams.y = clampWindowCoordinate(
+                layoutParams.y, screenHeight, windowHeight);
+    }
+
+    private static int clampWindowCoordinate(int coordinate, int screenSize, int windowSize) {
+        int minimum = Math.min(0, screenSize - windowSize);
+        int maximum = Math.max(0, screenSize - windowSize);
+        return Math.max(minimum, Math.min(coordinate, maximum));
+    }
+
+    private static void syncWindowPosition(
+            View pictureView, WindowManager.LayoutParams layoutParams) {
+        if (pictureView instanceof FloatImageView) {
+            ((FloatImageView) pictureView).setWindowPosition(layoutParams.x, layoutParams.y);
         }
     }
 

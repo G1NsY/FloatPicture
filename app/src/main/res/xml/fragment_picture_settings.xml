@@ -61,6 +61,13 @@
         app:iconSpaceReserved="false"
         app:key="settings_picture_copy_category"
         app:title="@string/settings_picture_copy_category">
+        <CheckBoxPreference
+            app:iconSpaceReserved="false"
+            app:key="settings_allow_picture_over_layout"
+            app:persistent="false"
+            app:singleLine="true"
+            app:summary="@string/settings_allow_picture_over_layout_sum"
+            app:title="@string/settings_allow_picture_over_layout" />
         <Preference
             app:iconSpaceReserved="false"
             app:key="settings_picture_save_as_copy"

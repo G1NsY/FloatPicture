@@ -82,6 +82,10 @@ public class PictureData {
         return defaultValue;
     }
 
+    public boolean contains(String name) {
+        return detailObject != null && detailObject.has(name);
+    }
+
     @SuppressWarnings("unused")
     public String getString(String name, String defaultValue) {
         if (detailObject.has(name)) {

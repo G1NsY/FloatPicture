@@ -130,7 +130,6 @@ public class ManageListAdapter extends AdvancedRecyclerView.Adapter<ManageListVi
         });
 
         holder.button_Picture_Edit.setOnClickListener(view -> {
-            ManageMethods.prepareWindowForEditing(mActivity, mPictureId);
             Intent intent = new Intent(mActivity, PictureSettingsActivity.class);
             intent.putExtra(Config.INTENT_PICTURE_EDIT_MODE, true);
             intent.putExtra(Config.INTENT_PICTURE_EDIT_ID, mPictureId);

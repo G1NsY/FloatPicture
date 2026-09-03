@@ -56,19 +56,25 @@ public class PermissionMethods {
     public static void delayOverlayPermissionCheck(final Context mContext) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (Settings.canDrawOverlays(mContext)) {
-                ManageMethods.RunWin(mContext);
+                initializeOverlaysAfterPermissionGrant(mContext);
             } else {
                 new Handler().postDelayed(() -> {
                     if (Settings.canDrawOverlays(mContext)) {
-                        ManageMethods.RunWin(mContext);
+                        initializeOverlaysAfterPermissionGrant(mContext);
                     } else {
                         Toast.makeText(mContext, R.string.permission_warn_overlay_intent, Toast.LENGTH_SHORT).show();
                     }
                 }, 1500);
             }
         } else {
-            ManageMethods.RunWin(mContext);
+            initializeOverlaysAfterPermissionGrant(mContext);
         }
+    }
+
+    private static void initializeOverlaysAfterPermissionGrant(Context context) {
+        ManageMethods.RunWin(context);
+        context.sendBroadcast(new Intent(Config.INTENT_ACTION_FLOATING_CONTROL_REFRESH)
+                .setPackage(context.getPackageName()));
     }
 
     public static boolean canDrawOverlays(Context context) {

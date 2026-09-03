@@ -262,6 +262,9 @@ public class FloatImageView extends AppCompatImageView {
                         + gestureStartFocusY * (1f - (float) newHeight / gestureStartHeight));
         layoutParams.width = newWidth;
         layoutParams.height = newHeight;
+        if (!overLayout) {
+            WindowsMethods.constrainPositionToScreen(getContext(), this, layoutParams);
+        }
         mNowPositionX = layoutParams.x;
         mNowPositionY = layoutParams.y;
         windowManager.updateViewLayout(this, layoutParams);
@@ -358,6 +361,9 @@ public class FloatImageView extends AppCompatImageView {
         windowParams.height = newHeight;
         windowParams.x = Math.round(centerX - newWidth / 2f);
         windowParams.y = Math.round(centerY - newHeight / 2f);
+        if (!overLayout) {
+            WindowsMethods.constrainPositionToScreen(getContext(), this, windowParams);
+        }
         mNowPositionX = windowParams.x;
         mNowPositionY = windowParams.y;
         setImageBitmap(renderedBitmap);
@@ -435,6 +441,10 @@ public class FloatImageView extends AppCompatImageView {
                 getContext(), (int) mNowPositionX, (int) mNowPositionY,
                 moveable || scalable || rotatable, overLayout);
         WindowsMethods.preserveCurrentWindowSize(this, layoutParams);
+        if (!overLayout) {
+            WindowsMethods.constrainPositionToScreen(getContext(), this, layoutParams);
+            setWindowPosition(layoutParams.x, layoutParams.y);
+        }
         windowManager.updateViewLayout(this, layoutParams);
     }
 

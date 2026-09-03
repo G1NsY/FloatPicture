@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/support_qr_preview_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginBottom="8dp"
+        android:text="@string/support_alipay_title"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/support_qr_hint"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:id="@+id/support_qr_full_image"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/support_qr_description"
+        android:src="@drawable/support_alipay_qr" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/support_close_qr"
+        style="@style/Widget.AppCompat.Button.Borderless.Colored"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:textColor="@color/colorPrimary"
+        android:text="@string/support_close_qr"
+        android:textAllCaps="false" />
+</LinearLayout>

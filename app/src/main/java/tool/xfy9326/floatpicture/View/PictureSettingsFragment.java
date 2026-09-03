@@ -28,6 +28,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.preference.CheckBoxPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
@@ -47,6 +48,7 @@ import tool.xfy9326.floatpicture.Utils.PictureData;
 
 public class PictureSettingsFragment extends PreferenceFragmentCompat {
     private final static String WINDOW_CREATED = "WINDOW_CREATED";
+    private static final float MAX_RESIZE_SCREEN_MULTIPLIER = 4f;
     private boolean Edit_Mode;
     private boolean originallyVisible = true;
     private boolean Window_Created;
@@ -154,17 +156,23 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
     private void setMode() {
         Intent intent = Objects.requireNonNull(requireActivity().getIntent());
         Edit_Mode = intent.getBooleanExtra(Config.INTENT_PICTURE_EDIT_MODE, false);
-        AlertDialog.Builder loading = new AlertDialog.Builder(requireActivity());
-        loading.setCancelable(false);
+        final AlertDialog alertDialog;
         if (!Edit_Mode) {
+            AlertDialog.Builder loading = new AlertDialog.Builder(requireActivity());
+            loading.setCancelable(false);
             loading.setOnCancelListener(dialog -> {
                 WindowsMethods.createWindow(windowManager, floatImageView, false, allow_picture_over_layout, position_x, position_y);
                 syncPositionToView(floatImageView, position_x, position_y);
             });
+            View mView = inflater.inflate(R.layout.dialog_loading,
+                    requireActivity().findViewById(R.id.layout_dialog_loading));
+            loading.setView(mView);
+            alertDialog = loading.show();
+        } else {
+            // Existing pictures load quickly. Showing and immediately dismissing a
+            // dimmed dialog here makes the entire settings screen visibly flash.
+            alertDialog = null;
         }
-        View mView = inflater.inflate(R.layout.dialog_loading, requireActivity().findViewById(R.id.layout_dialog_loading));
-        loading.setView(mView);
-        final AlertDialog alertDialog = loading.show();
         new Thread(() -> {
             if (!Window_Created) {
                 if (Edit_Mode) {
@@ -179,7 +187,8 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                     position_y = pictureData.getInt(Config.DATA_PICTURE_POSITION_Y, Config.DATA_DEFAULT_PICTURE_POSITION_Y);
                     picture_degree = pictureData.getFloat(Config.DATA_PICTURE_DEGREE, Config.DATA_DEFAULT_PICTURE_DEGREE);
                     picture_alpha = pictureData.getFloat(Config.DATA_PICTURE_ALPHA, Config.DATA_DEFAULT_PICTURE_ALPHA);
-                    allow_picture_over_layout = ManageMethods.resolvePictureOverLayout(requireContext());
+                    allow_picture_over_layout = ManageMethods.resolvePictureOverLayout(
+                            requireContext(), PictureId);
                     bitmap = ImageMethods.getShowBitmap(requireContext(), PictureId);
                     default_zoom = ImageMethods.getDefaultZoom(requireContext(), bitmap, false);
                     float zoom = pictureData.getFloat(Config.DATA_PICTURE_ZOOM, default_zoom);
@@ -209,8 +218,13 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                     floatImageView.setPictureId(PictureId);
                 }
                 requireActivity().runOnUiThread(() -> {
-                    alertDialog.cancel();
                     PreferenceSet();
+                    if (Edit_Mode) {
+                        ManageMethods.prepareWindowForEditing(requireContext(), PictureId);
+                    }
+                    if (alertDialog != null) {
+                        alertDialog.cancel();
+                    }
                 });
             }
         }).start();
@@ -255,7 +269,21 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         });
         Preference copyCategory = requirePreference(Config.PREFERENCE_PICTURE_COPY_CATEGORY);
         Preference copyPreference = requirePreference(Config.PREFERENCE_PICTURE_SAVE_AS_COPY);
-        copyCategory.setVisible(Edit_Mode);
+        CheckBoxPreference overflowPreference = (CheckBoxPreference) requirePreference(
+                Config.PREFERENCE_ALLOW_PICTURE_OVER_LAYOUT);
+        overflowPreference.setPersistent(false);
+        overflowPreference.setChecked(allow_picture_over_layout);
+        overflowPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+            allow_picture_over_layout = (Boolean) newValue;
+            if (floatImageView != null) {
+                floatImageView.setOverLayout(allow_picture_over_layout);
+            }
+            if (floatImageView_Edit != null) {
+                floatImageView_Edit.setOverLayout(allow_picture_over_layout);
+            }
+            return true;
+        });
+        copyCategory.setVisible(true);
         copyPreference.setVisible(Edit_Mode);
         copyPreference.setOnPreferenceClickListener(preference -> {
             saveAsCopy(preference);
@@ -283,6 +311,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         final float copyDegree = picture_degree;
         final int copyPositionX = position_x;
         final int copyPositionY = position_y;
+        final boolean copyAllowOverLayout = allow_picture_over_layout;
 
         new Thread(() -> {
             String copyId = ImageMethods.copyPictureFiles(PictureId);
@@ -299,6 +328,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                 copyData.put(Config.DATA_PICTURE_POSITION_X, copyPositionX);
                 copyData.put(Config.DATA_PICTURE_POSITION_Y, copyPositionY);
                 copyData.put(Config.DATA_PICTURE_DEGREE, copyDegree);
+                copyData.put(Config.DATA_ALLOW_PICTURE_OVER_LAYOUT, copyAllowOverLayout);
                 copyData.commit(copyName);
                 copied = copyData.getListArray().containsKey(copyId);
                 if (!copied) {
@@ -382,6 +412,7 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                 .setCancelable(false)
                 .setPositiveButton(R.string.settings_picture_outline_apply, null)
                 .setNegativeButton(R.string.cancel, null)
+                .setNeutralButton(R.string.settings_picture_outline_remove, null)
                 .create();
         currentDialog = outlineDialog;
 
@@ -452,14 +483,12 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             // outline dialog, making the two previews overlap.
             floatImageView.setVisibility(View.INVISIBLE);
             refreshLabelsAndPreview.run();
+            outlineDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+                    .setEnabled(savedOutlineSource != null);
             outlineDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(button -> {
                 outlinePreviewGeneration.incrementAndGet();
-                detailBar.setEnabled(false);
-                contrastBar.setEnabled(false);
-                colorSpinner.setEnabled(false);
-                grayBackgroundCheck.setEnabled(false);
-                outlineDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-                outlineDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(false);
+                setOutlineDialogEnabled(outlineDialog, detailBar, contrastBar,
+                        colorSpinner, grayBackgroundCheck, false);
                 progressBar.setVisibility(View.VISIBLE);
 
                 int radius = detailBar.getProgress() + 1;
@@ -468,11 +497,35 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                 boolean keepGrayBackground = grayBackgroundCheck.isChecked();
                 new Thread(() -> applyOutline(outlineSource, radius, contrast, outlineColor,
                                 keepGrayBackground,
-                                outlineDialog, progressBar),
+                                outlineDialog, progressBar, detailBar, contrastBar,
+                                colorSpinner, grayBackgroundCheck),
                         "FloatPicture-outline-apply").start();
+            });
+            outlineDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(button -> {
+                if (savedOutlineSource == null) return;
+                outlinePreviewGeneration.incrementAndGet();
+                setOutlineDialogEnabled(outlineDialog, detailBar, contrastBar,
+                        colorSpinner, grayBackgroundCheck, false);
+                progressBar.setVisibility(View.VISIBLE);
+                new Thread(() -> removeOutline(savedOutlineSource, outlineDialog, progressBar,
+                                detailBar, contrastBar, colorSpinner, grayBackgroundCheck),
+                        "FloatPicture-outline-remove").start();
             });
         });
         outlineDialog.show();
+    }
+
+    private void setOutlineDialogEnabled(AlertDialog owner, SeekBar detailBar,
+                                         SeekBar contrastBar, Spinner colorSpinner,
+                                         CheckBox grayBackgroundCheck, boolean enabled) {
+        detailBar.setEnabled(enabled);
+        contrastBar.setEnabled(enabled);
+        colorSpinner.setEnabled(enabled);
+        grayBackgroundCheck.setEnabled(enabled);
+        owner.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(enabled);
+        owner.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(enabled);
+        owner.getButton(AlertDialog.BUTTON_NEUTRAL).setEnabled(
+                enabled && ImageMethods.hasOutlineSource(PictureId));
     }
 
     private void requestOutlinePreview(Bitmap source, int radius, int contrast, int outlineColor,
@@ -511,7 +564,9 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
 
     private void applyOutline(Bitmap source, int radius, int contrast, int outlineColor,
                               boolean keepGrayBackground,
-                              AlertDialog owner, ProgressBar progressBar) {
+                              AlertDialog owner, ProgressBar progressBar,
+                              SeekBar detailBar, SeekBar contrastBar, Spinner colorSpinner,
+                              CheckBox grayBackgroundCheck) {
         boolean sourcePreserved = ImageMethods.ensureOutlineSource(source, PictureId);
         Bitmap result = sourcePreserved
                 ? ImageMethods.createOutline(
@@ -532,8 +587,8 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             if (!saved || result == null) {
                 if (result != null && !result.isRecycled()) result.recycle();
                 progressBar.setVisibility(View.GONE);
-                owner.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-                owner.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(true);
+                setOutlineDialogEnabled(owner, detailBar, contrastBar,
+                        colorSpinner, grayBackgroundCheck, true);
                 Toast.makeText(requireContext(),
                         R.string.settings_picture_outline_failed,
                         Toast.LENGTH_SHORT).show();
@@ -557,6 +612,49 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             owner.dismiss();
             Toast.makeText(requireContext(),
                     R.string.settings_picture_outline_success,
+                    Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void removeOutline(Bitmap original, AlertDialog owner, ProgressBar progressBar,
+                               SeekBar detailBar, SeekBar contrastBar, Spinner colorSpinner,
+                               CheckBox grayBackgroundCheck) {
+        boolean restored = IOMethods.replaceBitmap(
+                original, 100, Config.DEFAULT_PICTURE_DIR + PictureId);
+        if (restored) ImageMethods.clearOutlineSource(PictureId);
+
+        if (!isAdded()) {
+            if (!original.isRecycled()) original.recycle();
+            return;
+        }
+        requireActivity().runOnUiThread(() -> {
+            if (!restored) {
+                progressBar.setVisibility(View.GONE);
+                setOutlineDialogEnabled(owner, detailBar, contrastBar,
+                        colorSpinner, grayBackgroundCheck, true);
+                Toast.makeText(requireContext(),
+                        R.string.settings_picture_outline_remove_failed,
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Bitmap previous = bitmap;
+            bitmap = original;
+            if (floatImageView.isAttachedToWindow()) {
+                WindowsMethods.updateWindow(windowManager, floatImageView, bitmap,
+                        false, allow_picture_over_layout,
+                        zoom_x, zoom_y, picture_degree, position_x, position_y);
+            } else {
+                floatImageView.configureGestureImage(
+                        bitmap, zoom_x, zoom_y, picture_degree);
+            }
+            floatImageView.setAlpha(picture_alpha);
+            if (previous != null && previous != bitmap && !previous.isRecycled()) {
+                previous.recycle();
+            }
+            owner.dismiss();
+            Toast.makeText(requireContext(),
+                    R.string.settings_picture_outline_remove_success,
                     Toast.LENGTH_SHORT).show();
         });
     }
@@ -681,20 +779,22 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         int w = bitmap.getWidth();
         int h = bitmap.getHeight();
 
-        // 使用基准尺寸 (baseScreenX, baseScreenY) 来计算最大缩放值
-        float limitX_W = (float) (absCos > 0.001 ? baseScreenX / (w * absCos) : Float.MAX_VALUE);
-        float limitX_H = (float) (absSin > 0.001 ? baseScreenY / (w * absSin) : Float.MAX_VALUE);
+        // Allow the rendered picture to reach the same four-screen range used by
+        // gesture scaling. This keeps manual and gesture resizing consistent while
+        // retaining a finite bound for bitmap allocation.
+        float maximumRenderedWidth = baseScreenX * MAX_RESIZE_SCREEN_MULTIPLIER;
+        float maximumRenderedHeight = baseScreenY * MAX_RESIZE_SCREEN_MULTIPLIER;
+        float limitX_W = (float) (absCos > 0.001
+                ? maximumRenderedWidth / (w * absCos) : Float.MAX_VALUE);
+        float limitX_H = (float) (absSin > 0.001
+                ? maximumRenderedHeight / (w * absSin) : Float.MAX_VALUE);
         float calculatedMaxZoomX = Math.min(limitX_W, limitX_H);
 
-        float limitY_W = (float) (absSin > 0.001 ? baseScreenX / (h * absSin) : Float.MAX_VALUE);
-        float limitY_H = (float) (absCos > 0.001 ? baseScreenY / (h * absCos) : Float.MAX_VALUE);
+        float limitY_W = (float) (absSin > 0.001
+                ? maximumRenderedWidth / (h * absSin) : Float.MAX_VALUE);
+        float limitY_H = (float) (absCos > 0.001
+                ? maximumRenderedHeight / (h * absCos) : Float.MAX_VALUE);
         float calculatedMaxZoomY = Math.min(limitY_W, limitY_H);
-        // ===========================================================================
-
-        if (allow_picture_over_layout) {
-            calculatedMaxZoomX = calculatedMaxZoomX * 1.1f;
-            calculatedMaxZoomY = calculatedMaxZoomY * 1.1f;
-        }
 
         // 最终限制：不再取最小值，而是分别限制
         final float absoluteMaxZoomX = calculatedMaxZoomX;
@@ -1338,7 +1438,15 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
     }
 
     private void syncPositionToView(FloatImageView view, int x, int y) {
-        if (view != null) {
+        if (view == null) {
+            return;
+        }
+        android.view.ViewGroup.LayoutParams currentParams = view.getLayoutParams();
+        if (currentParams instanceof WindowManager.LayoutParams) {
+            WindowManager.LayoutParams windowParams =
+                    (WindowManager.LayoutParams) currentParams;
+            view.setWindowPosition(windowParams.x, windowParams.y);
+        } else {
             view.setWindowPosition(x, y);
         }
     }
@@ -1593,10 +1701,11 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
         pictureData.put(Config.DATA_PICTURE_POSITION_X, position_x);
         pictureData.put(Config.DATA_PICTURE_POSITION_Y, position_y);
         pictureData.put(Config.DATA_PICTURE_DEGREE, picture_degree);
+        pictureData.put(Config.DATA_ALLOW_PICTURE_OVER_LAYOUT, allow_picture_over_layout);
         pictureData.commit(PictureName);
         boolean global_touchable = PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
         boolean global_rotatable = PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean(Config.PREFERENCE_PINCH_ROTATION, false);
-        boolean effective_over_layout = ManageMethods.resolvePictureOverLayout(requireContext());
+        boolean effective_over_layout = allow_picture_over_layout;
         floatImageView.setMoveable(global_touchable);
         floatImageView.setScalable(global_touchable);
         floatImageView.setRotatable(global_rotatable);
@@ -1638,7 +1747,9 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
             int original_position_y = pictureData.getInt(Config.DATA_PICTURE_POSITION_Y, position_y);
             boolean global_touchable = PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
             boolean global_rotatable = PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean(Config.PREFERENCE_PINCH_ROTATION, false);
-            boolean effective_over_layout = ManageMethods.resolvePictureOverLayout(requireContext());
+            boolean effective_over_layout = pictureData.getBoolean(
+                    Config.DATA_ALLOW_PICTURE_OVER_LAYOUT,
+                    ManageMethods.resolvePictureOverLayout(requireContext()));
             floatImageView.setAlpha(original_alpha);
             floatImageView.setOverLayout(effective_over_layout);
             floatImageView.setMoveable(global_touchable);

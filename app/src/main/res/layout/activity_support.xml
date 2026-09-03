@@ -57,7 +57,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        android:text="@string/support_afdian_title"
+                        android:text="@string/support_alipay_title"
                         android:textColor="@color/colorPrimaryDark"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -71,26 +71,27 @@
                         android:text="@string/support_optional_message"
                         android:textSize="16sp" />
 
+                    <ImageView
+                        android:id="@+id/support_qr_image"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:adjustViewBounds="true"
+                        android:maxHeight="420dp"
+                        android:scaleType="fitCenter"
+                        android:contentDescription="@string/support_qr_description"
+                        android:src="@drawable/support_alipay_qr" />
+
                     <androidx.appcompat.widget.AppCompatButton
-                        android:id="@+id/support_open_afdian"
+                        android:id="@+id/support_view_qr"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:minHeight="48dp"
                         android:padding="12dp"
-                        android:text="@string/support_open_afdian"
+                        android:text="@string/support_view_qr"
                         android:textAllCaps="false"
                         android:textColor="@color/white"
                         app:backgroundTint="@color/colorPrimary" />
-
-                    <androidx.appcompat.widget.AppCompatButton
-                        android:id="@+id/support_copy_link"
-                        style="@style/Widget.AppCompat.Button.Borderless.Colored"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="48dp"
-                        android:padding="12dp"
-                        android:text="@string/support_copy_link"
-                        android:textAllCaps="false" />
 
                     <TextView
                         android:layout_width="match_parent"

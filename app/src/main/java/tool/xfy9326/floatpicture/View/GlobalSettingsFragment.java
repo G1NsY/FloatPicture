@@ -126,7 +126,8 @@ public class GlobalSettingsFragment extends PreferenceFragmentCompat {
 
         requirePreference(Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN)
                 .setOnPreferenceChangeListener((preference, newValue) -> {
-                    refreshGlobalDragWindowState();
+                    // This is only the default for pictures created from now on.
+                    // Existing pictures keep their own saved overflow setting.
                     return true;
                 });
 
@@ -221,8 +222,7 @@ public class GlobalSettingsFragment extends PreferenceFragmentCompat {
     private void refreshGlobalDragWindowState() {
         requireActivity().getWindow().getDecorView().post(() -> {
             if (isAdded()) {
-                // Keep overlays non-touchable while this settings screen is open,
-                // but immediately apply the latest over-screen boundary setting.
+                // Keep overlays non-touchable while this settings screen is open.
                 ManageMethods.updateAllWindowsGestureState(requireActivity(), false);
             }
         });

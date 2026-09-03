@@ -1,5 +1,5 @@
 FloatPicture 2 Privacy Policy
-Last updated: August 31, 2026
+Last updated: September 3, 2026
 
 FloatPicture 2 is an offline floating-picture utility. It does not require an account and does not include advertising, analytics, or tracking services. The app does not upload your pictures or usage data to a server.
 
@@ -15,7 +15,7 @@ Data sharing and retention
 FloatPicture 2 does not sell or share personal data. No personal data is transmitted by the app. Local pictures and settings remain on your device until you delete them or uninstall the app.
 
 External pages and optional support
-Some distribution versions offer an optional link to G1NsY's Afdian page. Opening this link hands a fixed public website address to an external app; FloatPicture 2 does not attach your pictures, picture settings or account information. Copying the support link writes only this public address to the system clipboard, and only when you request it. External sites and payment providers process information under their own privacy policies and terms. FloatPicture 2 does not process payments, receive payment credentials or unlock app features based on payments.
+Some distribution versions display a developer-provided Alipay collection QR image for optional support. The image is bundled with the app and is displayed locally, including in the full-image viewer. The support page does not launch a payment app, read or write the clipboard, or send pictures, picture settings or account information. You may choose to take a screenshot and scan it separately in Alipay. Alipay processes payment information under its own privacy policy and terms. FloatPicture 2 does not process payments, receive payment credentials or unlock app features based on payments. Other external pages, such as the project website, are subject to their own privacy policies.
 
 Contact
 For privacy questions or support, email: nimedea@gmail.com
@@ -24,7 +24,7 @@ https://github.com/G1NsY/FloatPicture2/issues
 
 
 悬浮图片2（FloatPicture 2）隐私政策
-更新日期：2026 年 8 月 31 日
+更新日期：2026 年 9 月 3 日
 
 悬浮图片2是一款离线悬浮图片工具。应用无需注册账号，不包含广告、统计分析或跟踪服务，也不会把你的图片或使用数据上传到服务器。
 
@@ -40,7 +40,7 @@ https://github.com/G1NsY/FloatPicture2/issues
 悬浮图片2不出售或共享个人数据，应用不会传输个人数据。图片与设置只保存在你的设备中，直到你主动删除或卸载应用。
 
 外部页面与自愿支持
-部分发行版本提供前往 G1NsY 爱发电主页的可选链接。打开链接时，应用只将固定的公开网址交给外部应用，不附带你的图片、图片设置或账号信息。仅当你主动点击复制支持链接时，才会将该公开网址写入系统剪贴板。外部网站及支付服务按照各自的隐私政策和条款处理信息。悬浮图片2不处理付款、不接收支付凭据，也不会根据付款情况解锁应用功能。
+部分发行版本展示开发者提供的支付宝收款码，供用户自愿支持。收款码图片随应用内置，在本地展示并可查看大图；支持页面不会启动支付应用、读写剪贴板，也不会发送图片、图片设置或账号信息。你可以自行截图，再单独打开支付宝识别。支付宝按照其隐私政策和条款处理支付信息。悬浮图片2不处理付款、不接收支付凭据，也不会根据付款情况解锁应用功能。项目网站等其他外部页面适用各自的隐私政策。
 
 联系方式
 如有隐私或支持问题，请联系邮箱：nimedea@gmail.com

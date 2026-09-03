@@ -85,7 +85,7 @@ public class ManageMethods {
         int position_y = pictureData.getInt(Config.DATA_PICTURE_POSITION_Y, Config.DATA_DEFAULT_PICTURE_POSITION_Y);
         boolean global_touchable = PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
         boolean global_rotatable = PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(Config.PREFERENCE_PINCH_ROTATION, false);
-        boolean over_layout = resolvePictureOverLayout(mContext);
+        boolean over_layout = resolvePictureOverLayout(mContext, pictureData, true);
         FloatImageView floatImageView = ImageMethods.createPictureView(mContext, bitmap, global_touchable, over_layout, zoom_x, zoom_y, picture_degree);
         floatImageView.setScalable(global_touchable);
         floatImageView.setRotatable(global_rotatable);
@@ -129,10 +129,26 @@ public class ManageMethods {
         mainApplication.setAppInit(false);
     }
 
+    /** Ensures notification and floating controls can operate after first-time permission setup. */
+    public static void ensureWindowsInitialized(Context context) {
+        if (!PermissionMethods.canDrawOverlays(context)) {
+            return;
+        }
+        MainApplication mainApplication =
+                (MainApplication) context.getApplicationContext();
+        if (!mainApplication.getRegister().isEmpty()
+                || new PictureData().getListArray().isEmpty()) {
+            return;
+        }
+        RunWin(context);
+        if (!mainApplication.getRegister().isEmpty()) {
+            mainApplication.setAppInit(true);
+        }
+    }
+
     public static void updateAllWindowsGestureState(Context mContext, boolean allowGlobalGestures) {
         HashMap<String, View> hashMap = ((MainApplication) mContext.getApplicationContext()).getRegister();
         WindowManager windowManager = getWindowManager(mContext);
-        PictureData pictureData = new PictureData();
         boolean global_touchable = allowGlobalGestures
                 && PreferenceManager.getDefaultSharedPreferences(mContext)
                 .getBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
@@ -141,35 +157,42 @@ public class ManageMethods {
                 .getBoolean(Config.PREFERENCE_PINCH_ROTATION, false);
         if (hashMap.size() > 0) {
             for (HashMap.Entry<?, ?> entry : hashMap.entrySet()) {
-                String id = entry.getKey().toString();
-                pictureData.setDataControl(id);
-                if (pictureData.getBoolean(Config.DATA_PICTURE_SHOW_ENABLED, Config.DATA_DEFAULT_PICTURE_SHOW_ENABLED)) {
-                    FloatImageView floatImageView = (FloatImageView) entry.getValue();
-                    // Adjustment dialogs temporarily replace the registered picture
-                    // with a preview window. Do not update the detached original.
-                    if (!floatImageView.isAttachedToWindow()) {
-                        continue;
-                    }
-                    boolean over_layout = resolvePictureOverLayout(mContext);
-                    boolean isMoveable = global_touchable;
-                    boolean isScalable = global_touchable;
-                    boolean isTouchable = isMoveable || isScalable || global_rotatable;
-
-                    floatImageView.setMoveable(isMoveable);
-                    floatImageView.setScalable(isScalable);
-                    floatImageView.setRotatable(global_rotatable);
-                    floatImageView.setOverLayout(over_layout);
-                    WindowManager.LayoutParams layoutParams = WindowsMethods.getDefaultLayout(
-                            mContext,
-                            (int) floatImageView.getMovedPositionX(),
-                            (int) floatImageView.getMovedPositionY(),
-                            isTouchable,
-                            over_layout);
-                    WindowsMethods.preserveCurrentWindowSize(floatImageView, layoutParams);
-                    windowManager.updateViewLayout(floatImageView, layoutParams);
+                if (!(entry.getValue() instanceof FloatImageView)) {
+                    continue;
                 }
+                FloatImageView floatImageView = (FloatImageView) entry.getValue();
+                boolean over_layout = resolvePictureOverLayout(
+                        mContext, entry.getKey().toString());
+                boolean isTouchable = global_touchable || global_rotatable;
+
+                // Persist the runtime state on every registered picture, including a
+                // picture temporarily detached by an editor. Its next attachment then
+                // no longer depends on reopening Global Settings to refresh the state.
+                floatImageView.setMoveable(global_touchable);
+                floatImageView.setScalable(global_touchable);
+                floatImageView.setRotatable(global_rotatable);
+                floatImageView.setOverLayout(over_layout);
+                if (!floatImageView.isAttachedToWindow()) {
+                    continue;
+                }
+                WindowManager.LayoutParams layoutParams = WindowsMethods.getDefaultLayout(
+                        mContext,
+                        (int) floatImageView.getMovedPositionX(),
+                        (int) floatImageView.getMovedPositionY(),
+                        isTouchable,
+                        over_layout);
+                WindowsMethods.preserveCurrentWindowSize(floatImageView, layoutParams);
+                windowManager.updateViewLayout(floatImageView, layoutParams);
             }
         }
+    }
+
+    public static void setMoveAndScaleGestureEnabled(Context context, boolean enabled) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, enabled)
+                .apply();
+        ensureWindowsInitialized(context);
+        updateAllWindowsGestureState(context, true);
     }
 
     public static void updateNotificationCount(Context context) {
@@ -247,7 +270,10 @@ public class ManageMethods {
         int positionY = Math.round(floatImageView.getMovedPositionY()) + deltaY;
         windowParams.x = positionX;
         windowParams.y = positionY;
-        floatImageView.setWindowPosition(positionX, positionY);
+        if (!resolvePictureOverLayout(context, currentPictureId)) {
+            WindowsMethods.constrainPositionToScreen(context, floatImageView, windowParams);
+        }
+        floatImageView.setWindowPosition(windowParams.x, windowParams.y);
         getWindowManager(context).updateViewLayout(floatImageView, windowParams);
         return true;
     }
@@ -269,7 +295,10 @@ public class ManageMethods {
                 Config.DATA_PICTURE_POSITION_X, Config.DATA_DEFAULT_PICTURE_POSITION_X);
         int savedPositionY = pictureData.getInt(
                 Config.DATA_PICTURE_POSITION_Y, Config.DATA_DEFAULT_PICTURE_POSITION_Y);
-        return floatImageView.hasUncommittedAdjustments(savedPositionX, savedPositionY);
+        float savedAlpha = pictureData.getFloat(
+                Config.DATA_PICTURE_ALPHA, Config.DATA_DEFAULT_PICTURE_ALPHA);
+        return floatImageView.hasUncommittedAdjustments(savedPositionX, savedPositionY)
+                || Math.abs(floatImageView.getAlpha() - savedAlpha) > 0.001f;
     }
 
     public static float getCurrentPictureDegree(Context context) {
@@ -277,6 +306,46 @@ public class ManageMethods {
         FloatImageView floatImageView = ImageMethods.getFloatImageViewById(
                 context, mainApplication.getCurrentPictureId());
         return floatImageView == null ? 0f : floatImageView.getCurrentDegree();
+    }
+
+    public static float getCurrentPictureAlpha(Context context) {
+        MainApplication mainApplication = (MainApplication) context.getApplicationContext();
+        String currentPictureId = mainApplication.getCurrentPictureId();
+        if (currentPictureId == null) {
+            return Config.DATA_DEFAULT_PICTURE_ALPHA;
+        }
+        FloatImageView floatImageView = ImageMethods.getFloatImageViewById(
+                context, currentPictureId);
+        if (floatImageView != null) {
+            return Math.max(0f, Math.min(1f, floatImageView.getAlpha()));
+        }
+        PictureData pictureData = new PictureData();
+        if (!pictureData.getListArray().containsKey(currentPictureId)) {
+            return Config.DATA_DEFAULT_PICTURE_ALPHA;
+        }
+        pictureData.setDataControl(currentPictureId);
+        return Math.max(0f, Math.min(1f, pictureData.getFloat(
+                Config.DATA_PICTURE_ALPHA, Config.DATA_DEFAULT_PICTURE_ALPHA)));
+    }
+
+    /** Applies an uncommitted opacity adjustment to the selected picture. */
+    public static boolean setCurrentPictureAlpha(Context context, float alpha) {
+        MainApplication mainApplication = (MainApplication) context.getApplicationContext();
+        String currentPictureId = mainApplication.getCurrentPictureId();
+        if (currentPictureId == null) {
+            return false;
+        }
+        PictureData pictureData = new PictureData();
+        if (!pictureData.getListArray().containsKey(currentPictureId)) {
+            return false;
+        }
+        float safeAlpha = Math.max(0f, Math.min(1f, alpha));
+        FloatImageView floatImageView = ImageMethods.getFloatImageViewById(
+                context, currentPictureId);
+        if (floatImageView != null) {
+            floatImageView.setAlpha(safeAlpha);
+        }
+        return floatImageView != null;
     }
 
     public static boolean setCurrentPictureDegree(Context context, float degree) {
@@ -336,6 +405,7 @@ public class ManageMethods {
         pictureData.put(Config.DATA_PICTURE_ZOOM_Y, zoomY);
         pictureData.put(Config.DATA_PICTURE_DEGREE,
                 floatImageView.getCurrentDegree());
+        pictureData.put(Config.DATA_PICTURE_ALPHA, floatImageView.getAlpha());
         pictureData.commit(null);
         floatImageView.commitGestureAdjustments();
 
@@ -363,6 +433,10 @@ public class ManageMethods {
             return false;
         }
 
+        PictureData pictureData = new PictureData();
+        pictureData.setDataControl(currentPictureId);
+        floatImageView.setAlpha(pictureData.getFloat(
+                Config.DATA_PICTURE_ALPHA, Config.DATA_DEFAULT_PICTURE_ALPHA));
         resetRuntimeGestureAdjustments(context, currentPictureId, floatImageView);
         if (floatImageView.isAttachedToWindow()) {
             android.content.SharedPreferences preferences = PreferenceManager
@@ -371,7 +445,7 @@ public class ManageMethods {
                     Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
             boolean rotatable = preferences.getBoolean(
                     Config.PREFERENCE_PINCH_ROTATION, false);
-            boolean overLayout = resolvePictureOverLayout(context);
+            boolean overLayout = resolvePictureOverLayout(context, currentPictureId);
             WindowManager.LayoutParams restoredParams = WindowsMethods.getDefaultLayout(
                     context,
                     Math.round(floatImageView.getMovedPositionX()),
@@ -379,6 +453,11 @@ public class ManageMethods {
                     moveable || rotatable,
                     overLayout);
             WindowsMethods.preserveCurrentWindowSize(floatImageView, restoredParams);
+            if (!overLayout) {
+                WindowsMethods.constrainPositionToScreen(
+                        context, floatImageView, restoredParams);
+                floatImageView.setWindowPosition(restoredParams.x, restoredParams.y);
+            }
             floatImageView.setMoveable(moveable);
             floatImageView.setScalable(moveable);
             floatImageView.setRotatable(rotatable);
@@ -399,17 +478,68 @@ public class ManageMethods {
                 Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN, false);
     }
 
-    /** Rotation starts with overflow enabled, which can then be changed independently. */
+    public static boolean resolvePictureOverLayout(Context context, String pictureId) {
+        if (pictureId == null || pictureId.isEmpty()) {
+            return resolvePictureOverLayout(context);
+        }
+        PictureData pictureData = new PictureData();
+        pictureData.setDataControl(pictureId);
+        return resolvePictureOverLayout(context, pictureData, true);
+    }
+
+    private static boolean resolvePictureOverLayout(
+            Context context, PictureData pictureData, boolean persistDefault) {
+        if (pictureData.contains(Config.DATA_ALLOW_PICTURE_OVER_LAYOUT)) {
+            return pictureData.getBoolean(
+                    Config.DATA_ALLOW_PICTURE_OVER_LAYOUT,
+                    Config.DATA_DEFAULT_ALLOW_PICTURE_OVER_LAYOUT);
+        }
+        boolean defaultValue = resolvePictureOverLayout(context);
+        if (persistDefault) {
+            // Snapshot the current global default once so existing pictures become
+            // independent from subsequent global preference changes as well.
+            pictureData.put(Config.DATA_ALLOW_PICTURE_OVER_LAYOUT, defaultValue);
+            pictureData.commit(null);
+        }
+        return defaultValue;
+    }
+
+    public static boolean isCurrentPictureOverLayout(Context context) {
+        String pictureId = ((MainApplication) context.getApplicationContext())
+                .getCurrentPictureId();
+        if (pictureId == null || pictureId.isEmpty()) {
+            return false;
+        }
+        return resolvePictureOverLayout(context, pictureId);
+    }
+
+    public static boolean setCurrentPictureOverLayout(Context context, boolean enabled) {
+        MainApplication mainApplication = (MainApplication) context.getApplicationContext();
+        String pictureId = mainApplication.getCurrentPictureId();
+        if (pictureId == null || pictureId.isEmpty()) {
+            return false;
+        }
+        PictureData pictureData = new PictureData();
+        if (!pictureData.getListArray().containsKey(pictureId)) {
+            return false;
+        }
+        pictureData.setDataControl(pictureId);
+        pictureData.put(Config.DATA_ALLOW_PICTURE_OVER_LAYOUT, enabled);
+        pictureData.commit(null);
+        FloatImageView floatImageView = ImageMethods.getFloatImageViewById(
+                context, pictureId);
+        if (floatImageView != null) {
+            floatImageView.setOverLayout(enabled);
+        }
+        return true;
+    }
+
     public static void setRotationGestureEnabled(Context context, boolean enabled) {
         android.content.SharedPreferences preferences = PreferenceManager
                 .getDefaultSharedPreferences(context);
-        android.content.SharedPreferences.Editor editor = preferences.edit()
+        preferences.edit()
                 .putBoolean(Config.PREFERENCE_PINCH_ROTATION, enabled)
-                .putBoolean(Config.PREFERENCE_ROTATION_OVERFLOW_DECOUPLED, true);
-        if (enabled) {
-            editor.putBoolean(Config.PREFERENCE_ALLOW_GLOBAL_DRAG_OVER_SCREEN, true);
-        }
-        editor.apply();
+                .apply();
         updateAllWindowsGestureState(context, true);
     }
 
@@ -499,7 +629,26 @@ public class ManageMethods {
     public static void prepareWindowForEditing(Context context, String pictureId) {
         MainApplication mainApplication = (MainApplication) context.getApplicationContext();
         if (!allowsMultiplePictures(context)) {
-            hideAllWindowsRuntime(context);
+            HashMap<String, View> registeredViews = mainApplication.getRegister();
+            WindowManager windowManager = getWindowManager(context);
+            for (Map.Entry<String, View> entry : registeredViews.entrySet()) {
+                if (!(entry.getValue() instanceof FloatImageView)) {
+                    continue;
+                }
+                FloatImageView imageView = (FloatImageView) entry.getValue();
+                if (pictureId.equals(entry.getKey())) {
+                    // Keep the target attached. Removing and adding the same overlay
+                    // in one frame causes a visible flash over the settings screen.
+                    if (imageView.isAttachedToWindow()) {
+                        resetRuntimeGestureAdjustments(
+                                context, entry.getKey(), imageView);
+                    }
+                } else {
+                    removeWindowIfAttached(windowManager, imageView);
+                    resetRuntimeGestureAdjustments(
+                            context, entry.getKey(), imageView);
+                }
+            }
         }
         if (showWindowById(context, pictureId)) {
             mainApplication.setWinVisible(true);
@@ -619,9 +768,14 @@ public class ManageMethods {
                 : pictureData.getInt(Config.DATA_PICTURE_POSITION_Y, Config.DATA_DEFAULT_PICTURE_POSITION_Y);
         boolean global_touchable = PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(Config.PREFERENCE_TOUCHABLE_POSITION_EDIT, false);
         boolean global_rotatable = PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(Config.PREFERENCE_PINCH_ROTATION, false);
-        boolean over_layout = resolvePictureOverLayout(mContext);
+        boolean over_layout = resolvePictureOverLayout(mContext, id);
         WindowManager.LayoutParams layoutParams = WindowsMethods.getDefaultLayout(mContext, positionX, positionY, global_touchable || global_rotatable, over_layout);
         WindowsMethods.preserveCurrentWindowSize(floatImageView, layoutParams);
+        if (!over_layout && !alreadyAttached) {
+            WindowsMethods.constrainPositionToScreen(mContext, floatImageView, layoutParams);
+            positionX = layoutParams.x;
+            positionY = layoutParams.y;
+        }
         floatImageView.setMoveable(global_touchable);
         floatImageView.setScalable(global_touchable);
         floatImageView.setRotatable(global_rotatable);

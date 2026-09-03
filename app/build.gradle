@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-// Keep normal app support, while allowing a support screen without payment links.
+// Keep the existing externalSupport build option for distributions without a payment QR.
 // This switch is not a declaration of Google Play policy compliance.
 def externalSupport = providers.gradleProperty('externalSupport').getOrElse('true')
 if (!(externalSupport in ['true', 'false'])) {
@@ -15,8 +15,8 @@ android {
         applicationId 'tool.g1nsy.floatpicture'
         minSdkVersion 19
         targetSdkVersion 36
-        versionCode 6
-        versionName '2.0.5-beta'
+        versionCode 7
+        versionName '2.0.6-beta'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         resValue 'bool', 'support_external_enabled', externalSupport
 

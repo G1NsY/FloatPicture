@@ -115,9 +115,14 @@ public class ImageMethods {
         return BitmapFactory.decodeFile(sourceFile.getAbsolutePath());
     }
 
+    public static boolean hasOutlineSource(String pictureId) {
+        File sourceFile = new File(getOutlineSourcePath(pictureId));
+        return sourceFile.isFile() && sourceFile.length() > 0;
+    }
+
     public static boolean ensureOutlineSource(Bitmap source, String pictureId) {
         File sourceFile = new File(getOutlineSourcePath(pictureId));
-        if (sourceFile.isFile() && sourceFile.length() > 0) return true;
+        if (hasOutlineSource(pictureId)) return true;
         return IOMethods.replaceBitmap(source, 100, sourceFile.getAbsolutePath());
     }
 
