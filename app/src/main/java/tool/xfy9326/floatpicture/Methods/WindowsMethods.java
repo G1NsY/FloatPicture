@@ -86,6 +86,11 @@ public class WindowsMethods {
         if (currentParams != null && currentParams.width > 0 && currentParams.height > 0) {
             targetParams.width = currentParams.width;
             targetParams.height = currentParams.height;
+        } else {
+            // A picture restored as hidden has no window yet. Use its rendered
+            // size before constraining its position or attaching it; WRAP_CONTENT
+            // can measure against the screen and crop a large/rotated image.
+            applyRenderedImageSize(pictureView, targetParams);
         }
     }
 

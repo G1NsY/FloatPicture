@@ -36,9 +36,14 @@
             app:title="@string/settings_global_picture_quality" />
         <Preference
             app:iconSpaceReserved="false"
+            app:key="export_backup"
+            app:summary="@string/backup_export_summary"
+            app:title="@string/backup_export" />
+        <Preference
+            app:iconSpaceReserved="false"
             app:key="import_legacy_data"
-            app:summary="@string/settings_import_legacy_data_sum"
-            app:title="@string/settings_import_legacy_data" />
+            app:summary="@string/backup_restore_summary"
+            app:title="@string/backup_restore" />
     </PreferenceCategory>
 
     <PreferenceCategory

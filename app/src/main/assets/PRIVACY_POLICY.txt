@@ -1,7 +1,7 @@
 FloatPicture 2 Privacy Policy
-Last updated: September 3, 2026
+Last updated: September 7, 2026
 
-FloatPicture 2 is an offline floating-picture utility. It does not require an account and does not include advertising, analytics, or tracking services. The app does not upload your pictures or usage data to a server.
+FloatPicture 2 is an offline floating-picture utility. It does not require an account and does not include advertising, analytics, or tracking services. The app does not automatically upload your pictures or usage data to a server.
 
 Pictures and local data
 You choose pictures through Android's system file picker. Selected pictures and the settings you create are copied to the app's private storage so that floating pictures can continue to work. Other apps cannot normally access this private storage. This data is removed when you uninstall the app. You can also delete individual pictures inside the app.
@@ -12,7 +12,10 @@ Notifications: used to display the optional persistent control panel for the flo
 Foreground service: used to keep user-requested floating pictures and their visible controls available while you use other apps.
 
 Data sharing and retention
-FloatPicture 2 does not sell or share personal data. No personal data is transmitted by the app. Local pictures and settings remain on your device until you delete them or uninstall the app.
+FloatPicture 2 does not sell personal data or automatically share it with external services. Local pictures and settings remain in app storage until you delete them or uninstall the app.
+
+User-selected backups
+You can export pictures and saved editing parameters through the Android system file picker. Backups are not encrypted by this app. Files saved outside app-specific storage remain after uninstalling until you delete them yourself. If you select a cloud drive or another document provider, that provider stores or transfers the backup under its own terms and privacy policy. Import reads only the file or folder you select and replaces your current library only after your confirmation.
 
 External pages and optional support
 Some distribution versions display a developer-provided Alipay collection QR image for optional support. The image is bundled with the app and is displayed locally, including in the full-image viewer. The support page does not launch a payment app, read or write the clipboard, or send pictures, picture settings or account information. You may choose to take a screenshot and scan it separately in Alipay. Alipay processes payment information under its own privacy policy and terms. FloatPicture 2 does not process payments, receive payment credentials or unlock app features based on payments. Other external pages, such as the project website, are subject to their own privacy policies.
@@ -24,9 +27,9 @@ https://github.com/G1NsY/FloatPicture2/issues
 
 
 悬浮图片2（FloatPicture 2）隐私政策
-更新日期：2026 年 9 月 3 日
+更新日期：2026 年 9 月 7 日
 
-悬浮图片2是一款离线悬浮图片工具。应用无需注册账号，不包含广告、统计分析或跟踪服务，也不会把你的图片或使用数据上传到服务器。
+悬浮图片2是一款离线悬浮图片工具。应用无需注册账号，不包含广告、统计分析或跟踪服务，也不会自动把你的图片或使用数据上传到服务器。
 
 图片与本地数据
 图片由你通过 Android 系统文件选择器主动选择。选中的图片以及你创建的设置会复制到应用私有存储中，以便悬浮图片持续工作。其他应用通常无法访问这些私有数据。卸载应用时这些数据会被系统删除，你也可以在应用内逐张删除图片。
@@ -37,7 +40,10 @@ https://github.com/G1NsY/FloatPicture2/issues
 前台服务：用于在你使用其他应用时维持你主动开启的悬浮图片及其可见控制功能。
 
 数据共享与保留
-悬浮图片2不出售或共享个人数据，应用不会传输个人数据。图片与设置只保存在你的设备中，直到你主动删除或卸载应用。
+悬浮图片2不出售个人数据，也不会自动向外部服务共享个人数据。应用私有存储中的图片与设置会保留到你主动删除或卸载应用。
+
+自主备份与恢复
+你可以通过 Android 系统文件选择器，将图片及已保存的编辑参数导出到自己选择的位置。应用不会对备份文件加密。保存在应用专属目录之外的备份不会随应用卸载而删除，需要你自行保管和删除。如果选择云盘或其他文件提供方，该提供方可能保存或传输备份，并适用其自身条款和隐私政策。导入只读取你选择的文件或文件夹，并在你确认后才替换当前图库。
 
 外部页面与自愿支持
 部分发行版本展示开发者提供的支付宝收款码，供用户自愿支持。收款码图片随应用内置，在本地展示并可查看大图；支持页面不会启动支付应用、读写剪贴板，也不会发送图片、图片设置或账号信息。你可以自行截图，再单独打开支付宝识别。支付宝按照其隐私政策和条款处理支付信息。悬浮图片2不处理付款、不接收支付凭据，也不会根据付款情况解锁应用功能。项目网站等其他外部页面适用各自的隐私政策。

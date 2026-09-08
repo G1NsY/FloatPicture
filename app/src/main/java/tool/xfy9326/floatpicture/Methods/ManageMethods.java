@@ -28,10 +28,8 @@ import tool.xfy9326.floatpicture.View.ManageListAdapter;
 public class ManageMethods {
 
     public static void SelectPicture(Activity mActivity) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        mActivity.startActivityForResult(intent, Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_GET_PICTURE);
+        PicturePicker.launch(mActivity, intent -> mActivity.startActivityForResult(
+                intent, Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_GET_PICTURE));
     }
 
     public static void RunWin(Context mContext) {

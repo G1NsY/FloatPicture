@@ -72,10 +72,11 @@ public class AboutLayoutTest {
                 instrumentation.waitForIdleSync();
                 SystemClock.sleep(300);
                 scenario.onActivity(activity -> {
-                    View website = activity.findViewById(R.id.textview_about_website);
+                    View licenseLink = activity.findViewById(R.id.textview_about_open_source);
                     Rect visible = new Rect();
-                    assertTrue("Website must be reachable", website.getGlobalVisibleRect(visible));
-                    assertEquals(website.getHeight(), visible.height());
+                    assertTrue("Copyright and license link must be reachable",
+                            licenseLink.getGlobalVisibleRect(visible));
+                    assertEquals(licenseLink.getHeight(), visible.height());
                 });
                 Bitmap screenshot = instrumentation.getUiAutomation().takeScreenshot();
                 assertNotNull(screenshot);

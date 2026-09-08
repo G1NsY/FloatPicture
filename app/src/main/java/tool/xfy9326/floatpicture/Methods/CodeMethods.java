@@ -1,14 +1,10 @@
 package tool.xfy9326.floatpicture.Methods;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 
-import java.io.FileInputStream;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
+import java.io.InputStream;
 import java.security.MessageDigest;
-import java.util.Objects;
 
 public class CodeMethods {
 
@@ -40,13 +36,16 @@ public class CodeMethods {
     }
 
     static String getFileMD5String(Context context, Uri uri) {
-        try {
-            ContentResolver contentResolver = context.getContentResolver();
-            FileInputStream in = Objects.requireNonNull(contentResolver.openAssetFileDescriptor(uri, "r")).createInputStream();
-            FileChannel ch = in.getChannel();
-            MappedByteBuffer byteBuffer = ch.map(FileChannel.MapMode.READ_ONLY, 0, in.available());
+        if (uri == null) return null;
+        // Gallery providers may return pipes or file slices, not seekable files.
+        try (InputStream in = context.getContentResolver().openInputStream(uri)) {
+            if (in == null) return null;
             MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-            messageDigest.update(byteBuffer);
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = in.read(buffer)) != -1) {
+                messageDigest.update(buffer, 0, count);
+            }
             return bufferToHex(messageDigest.digest());
         } catch (Exception e) {
             e.printStackTrace();

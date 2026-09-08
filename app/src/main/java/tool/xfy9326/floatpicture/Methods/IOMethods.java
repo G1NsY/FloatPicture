@@ -4,7 +4,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
+
+import androidx.exifinterface.media.ExifInterface;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,13 +27,78 @@ import tool.xfy9326.floatpicture.Utils.Config;
 public class IOMethods {
 
     static Bitmap readImageByUri(Context context, Uri uri) {
+        if (uri == null) return null;
         ContentResolver contentResolver = context.getContentResolver();
-        try (FileInputStream inputStream = Objects.requireNonNull(contentResolver.openAssetFileDescriptor(uri, "r")).createInputStream()) {
-            return BitmapFactory.decodeStream(inputStream);
-        } catch (Exception e) {
+        File source = null;
+        Bitmap bitmap = null;
+        try {
+            // Stage once: providers may supply a non-seekable stream. Bounds, decoding
+            // and EXIF must all see the same complete photo.
+            source = File.createTempFile("picture-import-", ".tmp", context.getCacheDir());
+            try (InputStream inputStream = contentResolver.openInputStream(uri);
+                 OutputStream outputStream = new FileOutputStream(source)) {
+                if (inputStream == null) return null;
+                byte[] buffer = new byte[8192];
+                int count;
+                while ((count = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, count);
+                }
+            }
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(source.getAbsolutePath(), options);
+            if (options.outWidth <= 0 || options.outHeight <= 0) return null;
+            options.inSampleSize = importSampleSize(options.outWidth, options.outHeight,
+                    Runtime.getRuntime().maxMemory());
+            options.inJustDecodeBounds = false;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            // Leave room for rotation and floating-window editing on older devices.
+            for (int attempt = 0; attempt < 3; attempt++) {
+                try {
+                    bitmap = BitmapFactory.decodeFile(source.getAbsolutePath(), options);
+                    break;
+                } catch (OutOfMemoryError error) {
+                    options.inSampleSize *= 2;
+                }
+            }
+            if (bitmap == null) return null;
+            try {
+                ExifInterface exif = new ExifInterface(source.getAbsolutePath());
+                Matrix matrix = new Matrix();
+                if (exif.isFlipped()) matrix.postScale(-1f, 1f);
+                matrix.postRotate(exif.getRotationDegrees());
+                if (!matrix.isIdentity()) {
+                    Bitmap oriented = Bitmap.createBitmap(bitmap, 0, 0,
+                            bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                    if (oriented != bitmap) bitmap.recycle();
+                    bitmap = oriented;
+                }
+            } catch (IOException ignored) {
+                // A decodable image need not contain readable EXIF metadata.
+            }
+            return bitmap;
+        } catch (Exception | OutOfMemoryError e) {
+            if (bitmap != null && !bitmap.isRecycled()) bitmap.recycle();
             e.printStackTrace();
             return null;
+        } finally {
+            if (source != null) {
+                //noinspection ResultOfMethodCallIgnored
+                source.delete();
+            }
         }
+    }
+
+    static int importSampleSize(int width, int height, long heapBytes) {
+        long maxPixels = Math.min(8_000_000L, Math.max(1L, heapBytes / 32L));
+        int sample = 1;
+        while (((long) width + sample - 1) / sample > 4096
+                || ((long) height + sample - 1) / sample > 4096
+                || (((long) width + sample - 1) / sample)
+                * (((long) height + sample - 1) / sample) > maxPixels) {
+            sample *= 2;
+        }
+        return sample;
     }
 
     static boolean replaceImageByUri(Context context, Uri uri, int quality, String targetPath) {

@@ -6,8 +6,10 @@ import android.os.Build;
 import android.view.View;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 
 import tool.xfy9326.floatpicture.Tools.CrashHandler;
+import tool.xfy9326.floatpicture.Methods.BackupArchive;
 import tool.xfy9326.floatpicture.Utils.Config;
 import tool.xfy9326.floatpicture.View.FloatImageView;
 import tool.xfy9326.floatpicture.View.ManageListAdapter;
@@ -20,10 +22,34 @@ public class MainApplication extends Application {
     private boolean pictureSequenceMode = false;
     private String currentPictureId;
     private float safeWindowsAlpha = 0.8f;
+    private final ArrayList<Runnable> pictureWindowAttachedListeners = new ArrayList<>();
+
+    // Window attachment and controller updates both run on the main thread.
+    public void addPictureWindowAttachedListener(Runnable listener) {
+        if (!pictureWindowAttachedListeners.contains(listener)) {
+            pictureWindowAttachedListeners.add(listener);
+        }
+    }
+
+    public void removePictureWindowAttachedListener(Runnable listener) {
+        pictureWindowAttachedListeners.remove(listener);
+    }
+
+    public void onPictureWindowAttached() {
+        for (Runnable listener : new ArrayList<>(pictureWindowAttachedListeners)) {
+            listener.run();
+        }
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        try {
+            BackupArchive.recover(new java.io.File(getFilesDir(), "FloatPicture"));
+        } catch (java.io.IOException exception) {
+            // Do not initialize an empty library over an interrupted restore.
+            throw new IllegalStateException("Unable to recover the previous picture library", exception);
+        }
         Config.initialize(this);
         ApplicationInit = false;
         if (!BuildConfig.DEBUG) {

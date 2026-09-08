@@ -3,6 +3,7 @@ package tool.xfy9326.floatpicture.Activities;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -30,6 +31,7 @@ import tool.xfy9326.floatpicture.Methods.ApplicationMethods;
 import tool.xfy9326.floatpicture.Methods.IOMethods;
 import tool.xfy9326.floatpicture.Methods.ManageMethods;
 import tool.xfy9326.floatpicture.Methods.PermissionMethods;
+import tool.xfy9326.floatpicture.Methods.PicturePicker;
 import tool.xfy9326.floatpicture.R;
 import tool.xfy9326.floatpicture.Utils.Config;
 import tool.xfy9326.floatpicture.View.AdvancedRecyclerView;
@@ -270,10 +272,16 @@ public class MainActivity extends AppCompatActivity {
                 ManageMethods.updateNotificationCount(this);
             }
         } else if (requestCode == Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_GET_PICTURE) {
-            if (resultCode == RESULT_OK && data != null) {
+            if (resultCode == RESULT_OK) {
+                Uri selectedUri = PicturePicker.getSelectedUri(data);
+                if (selectedUri == null) {
+                    SnackShow(this, R.string.action_add_picture_failed);
+                    return;
+                }
                 Intent intent = new Intent(MainActivity.this, PictureSettingsActivity.class);
                 intent.putExtra(Config.INTENT_PICTURE_EDIT_MODE, false);
-                intent.setData(data.getData());
+                intent.setData(selectedUri);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(intent, Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_ADD);
             }
         } else if (requestCode == Config.REQUEST_CODE_PERMISSION_OVERLAY) {

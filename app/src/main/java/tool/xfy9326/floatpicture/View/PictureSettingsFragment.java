@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import tool.xfy9326.floatpicture.Methods.ImageMethods;
 import tool.xfy9326.floatpicture.Methods.IOMethods;
 import tool.xfy9326.floatpicture.Methods.ManageMethods;
+import tool.xfy9326.floatpicture.Methods.PicturePicker;
 import tool.xfy9326.floatpicture.Methods.WindowsMethods;
 import tool.xfy9326.floatpicture.R;
 import tool.xfy9326.floatpicture.Utils.Config;
@@ -199,6 +200,21 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
                     //New
                     originallyVisible = true;
                     PictureId = ImageMethods.setNewImage(getActivity(), intent.getData());
+                    if (PictureId == null) {
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            activity.runOnUiThread(() -> {
+                                if (activity.isFinishing() || activity.isDestroyed()) return;
+                                // Dismiss without invoking the listener that creates a window.
+                                if (alertDialog != null) alertDialog.dismiss();
+                                Toast.makeText(activity, R.string.action_add_picture_failed,
+                                        Toast.LENGTH_LONG).show();
+                                activity.setResult(Activity.RESULT_CANCELED);
+                                activity.finish();
+                            });
+                        }
+                        return;
+                    }
                     pictureData.setDataControl(PictureId);
                     PictureName = ImageMethods.getImageDisplayName(requireContext(), intent.getData());
                     if (PictureName == null || PictureName.isEmpty()) {
@@ -359,10 +375,8 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
     }
 
     private void selectReplacementPicture() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(intent, Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_REPLACE);
+        PicturePicker.launch(requireContext(), intent -> startActivityForResult(
+                intent, Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_REPLACE));
     }
 
     private void showOutlineDialog() {
@@ -662,10 +676,14 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == Config.REQUEST_CODE_ACTIVITY_PICTURE_SETTINGS_REPLACE
-                && resultCode == Activity.RESULT_OK
-                && data != null
-                && data.getData() != null) {
-            replacePicture(data.getData());
+                && resultCode == Activity.RESULT_OK) {
+            Uri selectedUri = PicturePicker.getSelectedUri(data);
+            if (selectedUri != null) {
+                replacePicture(selectedUri);
+            } else {
+                Toast.makeText(requireContext(), R.string.action_replace_picture_failed,
+                        Toast.LENGTH_LONG).show();
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -1731,11 +1749,14 @@ public class PictureSettingsFragment extends PreferenceFragmentCompat {
     public void exit() {
         if (!Edit_Mode) {
             if (floatImageView != null) {
-                windowManager.removeView(floatImageView);
-                bitmap.recycle();
+                if (floatImageView.isAttachedToWindow()) {
+                    windowManager.removeView(floatImageView);
+                }
                 floatImageView = null;
             }
-            ImageMethods.clearAllTemp(requireActivity(), PictureId);
+            if (bitmap != null && !bitmap.isRecycled()) bitmap.recycle();
+            bitmap = null;
+            if (PictureId != null) ImageMethods.clearAllTemp(requireActivity(), PictureId);
         } else {
             float original_zoom = pictureData.getFloat(Config.DATA_PICTURE_ZOOM, zoom_x);
             float original_zoom_x = pictureData.getFloat(Config.DATA_PICTURE_ZOOM_X, original_zoom);

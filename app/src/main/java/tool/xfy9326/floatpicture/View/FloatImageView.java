@@ -11,6 +11,7 @@ import android.view.WindowManager;
 import androidx.appcompat.widget.AppCompatImageView;
 
 import tool.xfy9326.floatpicture.Methods.ImageMethods;
+import tool.xfy9326.floatpicture.MainApplication;
 import tool.xfy9326.floatpicture.Methods.ManageMethods;
 import tool.xfy9326.floatpicture.Methods.WindowsMethods;
 import tool.xfy9326.floatpicture.Utils.Config;
@@ -57,6 +58,13 @@ public class FloatImageView extends AppCompatImageView {
     public FloatImageView(Context context) {
         super(context);
         init(context);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // Also covers temporary editor previews and re-shown pictures.
+        ((MainApplication) getContext().getApplicationContext()).onPictureWindowAttached();
     }
 
     public void setWindowPosition(int x, int y) {

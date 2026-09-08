@@ -15,6 +15,8 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -80,6 +82,16 @@ final class FloatingControlManager {
     private boolean dockOnRight;
     private int controllerX;
     private int controllerY;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Runnable raiseControl = this::bringControlToFront;
+    private final Runnable pictureWindowAttached = () -> {
+        // Coalesce a batch of picture attachments; raise after their windows exist.
+        mainHandler.removeCallbacks(raiseControl);
+        mainHandler.post(raiseControl);
+    };
+    private final ArrayList<LinearLayout> retiringRoots = new ArrayList<>();
+    private int confirmationMessage;
+    private Runnable confirmationAction;
 
     FloatingControlManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
@@ -141,8 +153,7 @@ final class FloatingControlManager {
                 snapCollapsedToDockedEdge();
                 saveControllerPosition();
             }
-            layoutParams.x = controllerX;
-            layoutParams.y = controllerY;
+            updateControllerWindowPosition();
             windowManager.updateViewLayout(root, layoutParams);
         }
     }
@@ -168,19 +179,28 @@ final class FloatingControlManager {
         clampControllerPosition(dp(COLLAPSED_SIZE_DP), dp(COLLAPSED_SIZE_DP));
         updateDockSideFromPosition(dp(COLLAPSED_SIZE_DP));
         snapCollapsedToDockedEdge();
-        layoutParams.x = controllerX;
-        layoutParams.y = controllerY;
+        updateControllerWindowPosition();
         try {
             windowManager.addView(root, layoutParams);
+            ((MainApplication) context).addPictureWindowAttachedListener(pictureWindowAttached);
         } catch (RuntimeException ignored) {
             root = null;
         }
     }
 
     private void remove() {
-        if (root != null && root.isAttachedToWindow()) {
+        ((MainApplication) context).removePictureWindowAttachedListener(pictureWindowAttached);
+        mainHandler.removeCallbacks(raiseControl);
+        for (LinearLayout retiringRoot : new ArrayList<>(retiringRoots)) {
+            removeRetiringRoot(retiringRoot);
+        }
+        confirmationMessage = 0;
+        confirmationAction = null;
+        if (root != null) {
             try {
-                windowManager.removeView(root);
+                // addView can succeed before the first attachment traversal.
+                // Remove that pending window before recycling the shared icon.
+                windowManager.removeViewImmediate(root);
             } catch (IllegalArgumentException ignored) {
                 // It may already have been removed during a service lifecycle change.
             }
@@ -224,6 +244,8 @@ final class FloatingControlManager {
     }
 
     private void buildCollapsedView() {
+        confirmationMessage = 0;
+        confirmationAction = null;
         expanded = false;
         precisionControlMode = PRECISION_CONTROL_NONE;
         transparencyButton = null;
@@ -260,6 +282,8 @@ final class FloatingControlManager {
     }
 
     private void buildExpandedView() {
+        confirmationMessage = 0;
+        confirmationAction = null;
         expanded = true;
         gestureButton = null;
         rotationButton = null;
@@ -515,16 +539,10 @@ final class FloatingControlManager {
     }
 
     private void expand() {
-        if (root == null || layoutParams == null) {
-            return;
-        }
-        buildExpandedView();
-        layoutParams.width = dp(236);
-        layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
-        clampControllerPosition(dp(236), dp(EXPANDED_HEIGHT_DP));
-        layoutParams.x = controllerX;
-        layoutParams.y = controllerY;
-        windowManager.updateViewLayout(root, layoutParams);
+        // Keep the dot unchanged until the complete panel is drawn at its final
+        // position. Resizing/moving the visible right-docked window makes Android
+        // animate it horizontally even when windowAnimations is zero.
+        bringControlToFront(true);
     }
 
     private void collapse() {
@@ -536,8 +554,7 @@ final class FloatingControlManager {
         layoutParams.height = dp(COLLAPSED_SIZE_DP);
         clampControllerPosition(dp(COLLAPSED_SIZE_DP), dp(COLLAPSED_SIZE_DP));
         snapCollapsedToDockedEdge();
-        layoutParams.x = controllerX;
-        layoutParams.y = controllerY;
+        updateControllerWindowPosition();
         windowManager.updateViewLayout(root, layoutParams);
         saveControllerPosition();
     }
@@ -700,6 +717,8 @@ final class FloatingControlManager {
     }
 
     private void showConfirmation(int messageResource, Runnable confirmedAction) {
+        confirmationMessage = messageResource;
+        confirmationAction = confirmedAction;
         root.removeAllViews();
         root.setOnTouchListener(null);
         root.setPadding(dp(10), dp(8), dp(10), dp(10));
@@ -744,12 +763,16 @@ final class FloatingControlManager {
         layoutParams.width = dp(236);
         layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
         clampControllerPosition(dp(236), dp(expandedEstimatedHeightDp()));
-        layoutParams.x = controllerX;
-        layoutParams.y = controllerY;
+        updateControllerWindowPosition();
         windowManager.updateViewLayout(root, layoutParams);
     }
 
     private void bringControlToFront() {
+        bringControlToFront(false);
+    }
+
+    private void bringControlToFront(boolean expandControl) {
+        mainHandler.removeCallbacks(raiseControl);
         LinearLayout previousRoot = root;
         WindowManager.LayoutParams previousParams = layoutParams;
         if (previousRoot == null || previousParams == null
@@ -758,6 +781,10 @@ final class FloatingControlManager {
         }
         boolean wasExpanded = expanded;
         int previousPrecisionMode = precisionControlMode;
+        int previousControllerX = controllerX;
+        int previousControllerY = controllerY;
+        int previousConfirmationMessage = confirmationMessage;
+        Runnable previousConfirmationAction = confirmationAction;
         LinearLayout replacementRoot = new LinearLayout(context);
         replacementRoot.setOrientation(LinearLayout.VERTICAL);
         WindowManager.LayoutParams replacementParams = new WindowManager.LayoutParams();
@@ -766,13 +793,22 @@ final class FloatingControlManager {
         replacementRoot.setAlpha(0f);
         root = replacementRoot;
         layoutParams = replacementParams;
-        if (wasExpanded) {
+        if (previousConfirmationAction != null) {
+            showConfirmation(previousConfirmationMessage, previousConfirmationAction);
+        } else if (wasExpanded || expandControl) {
             buildExpandedView();
         } else {
             buildCollapsedView();
         }
+        if (expandControl) {
+            replacementParams.width = dp(236);
+            replacementParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            clampControllerPosition(dp(236), dp(expandedEstimatedHeightDp()));
+            updateControllerWindowPosition();
+        }
         try {
             windowManager.addView(replacementRoot, replacementParams);
+            retiringRoots.add(previousRoot);
             ViewTreeObserver.OnDrawListener firstDrawListener =
                     new ViewTreeObserver.OnDrawListener() {
                         private boolean handled;
@@ -790,13 +826,7 @@ final class FloatingControlManager {
                                 }
                                 replacementRoot.setAlpha(1f);
                                 replacementRoot.postOnAnimation(() -> {
-                                    if (previousRoot.isAttachedToWindow()) {
-                                        try {
-                                            windowManager.removeView(previousRoot);
-                                        } catch (IllegalArgumentException ignored) {
-                                            // The previous copy may already be gone.
-                                        }
-                                    }
+                                    removeRetiringRoot(previousRoot);
                                 });
                             });
                         }
@@ -808,12 +838,25 @@ final class FloatingControlManager {
             layoutParams = previousParams;
             expanded = wasExpanded;
             precisionControlMode = previousPrecisionMode;
-            if (wasExpanded) {
+            controllerX = previousControllerX;
+            controllerY = previousControllerY;
+            if (previousConfirmationAction != null) {
+                showConfirmation(previousConfirmationMessage, previousConfirmationAction);
+            } else if (wasExpanded) {
                 buildExpandedView();
             } else {
                 buildCollapsedView();
             }
         }
+    }
+
+    private void removeRetiringRoot(LinearLayout retiringRoot) {
+        try {
+            windowManager.removeViewImmediate(retiringRoot);
+        } catch (IllegalArgumentException ignored) {
+            // Already removed during shutdown or a later replacement.
+        }
+        retiringRoots.remove(retiringRoot);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -831,8 +874,8 @@ final class FloatingControlManager {
                     case MotionEvent.ACTION_DOWN -> {
                         downRawX = event.getRawX();
                         downRawY = event.getRawY();
-                        downWindowX = layoutParams.x;
-                        downWindowY = layoutParams.y;
+                        downWindowX = controllerX;
+                        downWindowY = controllerY;
                         dragged = false;
                         return true;
                     }
@@ -850,8 +893,7 @@ final class FloatingControlManager {
                                     expanded
                                             ? dp(expandedEstimatedHeightDp())
                                             : dp(COLLAPSED_SIZE_DP));
-                            layoutParams.x = controllerX;
-                            layoutParams.y = controllerY;
+                            updateControllerWindowPosition();
                             windowManager.updateViewLayout(root, layoutParams);
                         }
                         return true;
@@ -861,11 +903,12 @@ final class FloatingControlManager {
                             if (!expanded) {
                                 updateDockSideFromPosition(dp(COLLAPSED_SIZE_DP));
                                 snapCollapsedToDockedEdge();
-                                layoutParams.x = controllerX;
-                                layoutParams.y = controllerY;
+                                updateControllerWindowPosition();
                                 windowManager.updateViewLayout(root, layoutParams);
                             } else {
                                 updateDockSideFromPosition(dp(236));
+                                updateControllerWindowPosition();
+                                windowManager.updateViewLayout(root, layoutParams);
                             }
                             saveControllerPosition();
                         } else if (openOnTap && event.getActionMasked() == MotionEvent.ACTION_UP) {
@@ -880,6 +923,20 @@ final class FloatingControlManager {
                 }
             }
         };
+    }
+
+    private void updateControllerWindowPosition() {
+        // Store positions from the physical left edge, but keep the window
+        // anchored to its docked edge as its width changes on expand/collapse.
+        layoutParams.gravity = Gravity.TOP | (dockOnRight ? Gravity.RIGHT : Gravity.LEFT);
+        if (dockOnRight) {
+            Point displaySize = new Point();
+            windowManager.getDefaultDisplay().getSize(displaySize);
+            layoutParams.x = displaySize.x - layoutParams.width - controllerX;
+        } else {
+            layoutParams.x = controllerX;
+        }
+        layoutParams.y = controllerY;
     }
 
     private void clampControllerPosition(int width, int estimatedHeight) {

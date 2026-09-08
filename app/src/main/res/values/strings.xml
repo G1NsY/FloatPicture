@@ -1,4 +1,22 @@
 <resources>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_restore">Import / restore data</string>
+    <string name="backup_export_summary">Save pictures and their saved editing parameters to a location you choose</string>
+    <string name="backup_restore_summary">Restore a backup file or import an old FloatPicture folder</string>
+    <string name="backup_export_description">Back up pictures, original images used for line art, picture order, and saved position, scale, rotation and opacity. Global preferences are not included.\n\nSave any pending gesture adjustments before exporting. Choose Downloads or another location outside the app folder so the backup remains after uninstalling. Wait for the success message before uninstalling.</string>
+    <string name="backup_restore_description">Choose a backup file or an old FloatPicture folder. The data will be checked before you confirm replacement of your current pictures and saved editing parameters. Global preferences stay unchanged.</string>
+    <string name="backup_ready">Ready. You can return without changing your data.</string>
+    <string name="backup_working">Processing pictures and parameters… Please keep the app open.</string>
+    <string name="backup_choose_location">Choose save location</string>
+    <string name="backup_choose_file">Choose data to import</string>
+    <string name="backup_source_zip">Backup file (.fpbackup.zip)</string>
+    <string name="backup_source_folder">Old FloatPicture folder</string>
+    <string name="backup_restore_confirm">Verified %1$d pictures. Restoring will replace your current picture library and saved editing parameters. Export your current library first if you want to keep it. Continue?</string>
+    <string name="backup_restore_confirm_button">Replace current library and restore</string>
+    <string name="backup_export_success">Backup saved successfully: %1$d pictures with their saved editing parameters. Keep this file and select it from Import / restore data after reinstalling.</string>
+    <string name="backup_export_failed">Backup failed. Your current data has not been changed. Check free space and file access, and avoid editing pictures during export. Do not uninstall the app or use any incomplete backup file.</string>
+    <string name="backup_restore_failed">Could not restore this data. It may be incomplete, damaged, unsupported, or unreadable, or storage may be full. Your previous library is retained; try another file or folder.</string>
+    <string name="backup_picker_unavailable">Cannot open the file picker. Enable the system Files app and try again.</string>
     <string name="app_name">FloatPicture 2</string>
     <string name="done">Done</string>
     <string name="cancel">Cancel</string>
@@ -60,6 +78,8 @@
     <string name="action_warn_edit_hided_window">You can\'t edit a hided window!</string>
     <string name="action_delete_window">Delete window success!</string>
     <string name="action_add_window">Add window success!</string>
+    <string name="action_add_picture_failed">Could not import this picture. Try selecting a local JPG or PNG using Files.</string>
+    <string name="picture_picker_unavailable">Could not open the picture picker. Enable Files or Gallery and try again.</string>
     <string name="action_picture_order_saved">Picture order saved</string>
     <string name="action_replace_picture_success">Picture replaced and existing settings preserved</string>
     <string name="action_replace_picture_failed">Failed to replace picture</string>
@@ -89,9 +109,9 @@
     <string name="author">XFY9326(ClareX)</string>
     <string name="website">https://github.com/G1NsY/FloatPicture2</string>
     <string name="application_author">Original Author:</string>
-    <string name="application_modified_by">Maintained and modified by:</string>
+    <string name="application_modified_by">Developed and maintained by:</string>
     <string name="modified_author">G1NsY(RY)</string>
-    <string name="open_source_license">Open Source License</string>
+    <string name="open_source_license">Copyright and Open Source License</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="privacy_contact_url">https://github.com/G1NsY/FloatPicture2/issues</string>
     <string name="privacy_acknowledgement_title">Before you continue</string>

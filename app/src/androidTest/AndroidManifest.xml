@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <provider
+            android:name="tool.xfy9326.floatpicture.Methods.BackupTestProvider"
+            android:authorities="tool.g1nsy.floatpicture.test.backup"
+            android:exported="true" />
+        <provider
+            android:name="tool.xfy9326.floatpicture.Methods.ImportTestProvider"
+            android:authorities="tool.g1nsy.floatpicture.test.import"
+            android:exported="true" />
+    </application>
+</manifest>

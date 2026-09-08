@@ -1,0 +1,124 @@
+INSTRUMENTATION_STATUS: class=tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest:
+INSTRUMENTATION_STATUS: test=overflowImportPreservesSavedPositionImmediately
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,132 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,132 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,132 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,132 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,132 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,132 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,650 1080x498]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.overflowImportPreservesSavedPositionImmediately(ImportedPicturePositionTest.java:115)
+
+INSTRUMENTATION_STATUS: stream=
+Error in overflowImportPreservesSavedPositionImmediately(tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest):
+java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,132 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,132 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,132 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,132 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,132 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,132 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,650 1080x498]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.overflowImportPreservesSavedPositionImmediately(ImportedPicturePositionTest.java:115)
+
+INSTRUMENTATION_STATUS: test=overflowImportPreservesSavedPositionImmediately
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=visibleImportMatchesReopen
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=visibleImportMatchesReopen
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=hiddenImportFirstDisplayMatchesReopen
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,0 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,0 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,0 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,0 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,0 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,0 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,582 1080x498, d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first=Rect(228, 686 - 1308, 1184) reopened=Rect(228, 618 - 1308, 1116)]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.hiddenImportFirstDisplayMatchesReopen(ImportedPicturePositionTest.java:107)
+
+INSTRUMENTATION_STATUS: stream=
+Error in hiddenImportFirstDisplayMatchesReopen(tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest):
+java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,0 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,0 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,0 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,0 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,0 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,0 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,582 1080x498, d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first=Rect(228, 686 - 1308, 1184) reopened=Rect(228, 618 - 1308, 1116)]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.hiddenImportFirstDisplayMatchesReopen(ImportedPicturePositionTest.java:107)
+
+INSTRUMENTATION_STATUS: test=hiddenImportFirstDisplayMatchesReopen
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=multiplePictureImportFirstDisplayMatchesReopen
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,0 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,0 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,0 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,0 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,0 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,0 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,582 1080x498, d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first=Rect(228, 686 - 1308, 1184) reopened=Rect(228, 618 - 1308, 1116)]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.multiplePictureImportFirstDisplayMatchesReopen(ImportedPicturePositionTest.java:111)
+
+INSTRUMENTATION_STATUS: stream=
+Error in multiplePictureImportFirstDisplayMatchesReopen(tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest):
+java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,0 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,0 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,0 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,0 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,0 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,0 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,582 1080x498, d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first=Rect(228, 686 - 1308, 1184) reopened=Rect(228, 618 - 1308, 1116)]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.multiplePictureImportFirstDisplayMatchesReopen(ImportedPicturePositionTest.java:111)
+
+INSTRUMENTATION_STATUS: test=multiplePictureImportFirstDisplayMatchesReopen
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 32.685
+There were 3 failures:
+1) overflowImportPreservesSavedPositionImmediately(tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest)
+java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,132 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,132 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,132 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,132 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,132 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,132 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 168 - 1180, 1799), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,650 1080x498]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.overflowImportPreservesSavedPositionImmediately(ImportedPicturePositionTest.java:115)
+2) hiddenImportFirstDisplayMatchesReopen(tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest)
+java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,0 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,0 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,0 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,0 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,0 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,0 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,582 1080x498, d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first=Rect(228, 686 - 1308, 1184) reopened=Rect(228, 618 - 1308, 1116)]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.hiddenImportFirstDisplayMatchesReopen(ImportedPicturePositionTest.java:107)
+3) multiplePictureImportFirstDisplayMatchesReopen(tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest)
+java.lang.AssertionError: [a0538925082edfc482d7fa758e5768c3 first layout=100,132 -2x-2 expected=100,0 1080x1631, a0538925082edfc482d7fa758e5768c3 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 5cdb937cf9af127a605b0a29725e049e_1785748322551 first layout=100,132 -2x-2 expected=100,0 1080x1631, 5cdb937cf9af127a605b0a29725e049e_1785748322551 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first layout=100,132 -2x-2 expected=100,0 1080x1631, 69fd4a6e6a21c3ef3a63627daeb71424_1785748395285 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first layout=100,132 -2x-2 expected=100,0 1080x1631, 3a37cb86a0c5af4ae6b43325f9d24adb_1784786678735 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first layout=100,132 -2x-2 expected=100,0 1080x1631, 99329d0d19242e0d5b451de10f15b3d2_1784786794999 first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), 66095dd231b121ebd1aef1a318c18a0b first layout=100,132 -2x-2 expected=100,0 1080x1631, 66095dd231b121ebd1aef1a318c18a0b first=Rect(100, 168 - 1180, 1122) reopened=Rect(100, 36 - 1180, 1667), d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first layout=228,650 -2x-2 expected=228,582 1080x498, d36e4eb4aac1d4ed5b23495243c550be_1788849509551 first=Rect(228, 686 - 1308, 1184) reopened=Rect(228, 618 - 1308, 1116)]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.verify(ImportedPicturePositionTest.java:169)
+	at tool.xfy9326.floatpicture.Methods.ImportedPicturePositionTest.multiplePictureImportFirstDisplayMatchesReopen(ImportedPicturePositionTest.java:111)
+
+FAILURES!!!
+Tests run: 4,  Failures: 3
+
+
+INSTRUMENTATION_CODE: -1

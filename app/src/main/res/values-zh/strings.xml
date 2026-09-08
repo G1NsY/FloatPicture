@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="backup_export">导出备份</string>
+    <string name="backup_restore">导入/恢复数据</string>
+    <string name="backup_export_summary">将图片及已保存的编辑参数备份到你选择的位置</string>
+    <string name="backup_restore_summary">恢复备份文件，或导入旧版 FloatPicture 文件夹</string>
+    <string name="backup_export_description">备份包含图片、生成线稿时保留的原图、图片顺序，以及已保存的位置、缩放、旋转和透明度等参数，不包含通用设置。\n\n导出前请先保存尚未确认的手势调整。请选择“下载”等应用目录以外的位置，确保卸载后备份仍会保留。看到导出成功提示后，再卸载应用。</string>
+    <string name="backup_restore_description">选择备份文件或旧版 FloatPicture 文件夹。系统会先检查数据，再由你确认替换当前图片和已保存的编辑参数。通用设置保持不变。</string>
+    <string name="backup_ready">准备就绪。可以直接返回，不会修改当前数据。</string>
+    <string name="backup_working">正在处理图片和参数…请保持应用开启。</string>
+    <string name="backup_choose_location">选择保存位置</string>
+    <string name="backup_choose_file">选择要导入的数据</string>
+    <string name="backup_source_zip">备份文件（.fpbackup.zip）</string>
+    <string name="backup_source_folder">旧版 FloatPicture 文件夹</string>
+    <string name="backup_restore_confirm">已检查 %1$d 张图片。恢复将替换当前图库及已保存的编辑参数。如果需要保留当前数据，请先导出备份。是否继续？</string>
+    <string name="backup_restore_confirm_button">替换当前图库并恢复</string>
+    <string name="backup_export_success">备份已成功保存，包含 %1$d 张图片及已保存的编辑参数。请保管好这个文件，重新安装后可在“导入/恢复数据”中选择它恢复。</string>
+    <string name="backup_export_failed">导出失败，当前数据未改变。请检查可用空间和文件访问权限，导出期间避免编辑图片。请勿卸载应用或使用未完成的备份文件。</string>
+    <string name="backup_restore_failed">无法恢复这些数据：文件可能不完整、损坏、版本不支持、无法读取，或存储空间不足。之前的图库已保留，请尝试其他文件或文件夹。</string>
+    <string name="backup_picker_unavailable">无法打开文件选择器，请启用系统“文件”应用后重试。</string>
     <string name="app_name">悬浮图片2</string>
     <string name="adapter_image_description">图片预览</string>
     <string name="drag_to_reorder">长按并拖动以调整图片顺序</string>
@@ -61,6 +79,8 @@
     <string name="action_warn_edit_hided_window">你不能编辑一个已经隐藏的窗口！</string>
     <string name="action_delete_window">成功删除窗口！</string>
     <string name="action_add_window">成功添加窗口！</string>
+    <string name="action_add_picture_failed">图片导入失败，请尝试通过“文件”选择本机 JPG 或 PNG 图片。</string>
+    <string name="picture_picker_unavailable">无法打开图片选择器，请启用系统“文件”或“图库”后重试。</string>
     <string name="action_picture_order_saved">图片顺序已保存</string>
     <string name="action_replace_picture_success">图片已替换，原有参数已保留</string>
     <string name="action_replace_picture_failed">替换图片失败</string>
@@ -90,9 +110,9 @@
     <string name="author">XFY9326(逸雪飞扬)</string>
     <string name="website">https://github.com/G1NsY/FloatPicture2</string>
     <string name="application_author">原作者：</string>
-    <string name="application_modified_by">维护与修改：</string>
+    <string name="application_modified_by">当前开发与维护：</string>
     <string name="modified_author">G1NsY(RY)</string>
-    <string name="open_source_license">开源协议</string>
+    <string name="open_source_license">版权与开源许可</string>
     <string name="privacy_policy">隐私政策</string>
     <string name="privacy_contact_url">https://github.com/G1NsY/FloatPicture2/issues</string>
     <string name="privacy_acknowledgement_title">使用前说明</string>

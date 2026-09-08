@@ -75,8 +75,11 @@ public class ImageMethods {
         if (bitmap != null) {
             String path = Config.DEFAULT_PICTURE_DIR + uniqueId;
             int quality = PreferenceManager.getDefaultSharedPreferences(activity).getInt(Config.PREFERENCE_NEW_PICTURE_QUALITY, 80);
-            IOMethods.saveBitmap(bitmap, quality, path);
-            return uniqueId;
+            try {
+                return IOMethods.replaceBitmap(bitmap, quality, path) ? uniqueId : null;
+            } finally {
+                bitmap.recycle();
+            }
         }
         return null;
     }

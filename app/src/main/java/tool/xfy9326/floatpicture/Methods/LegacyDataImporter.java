@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.DocumentsContract;
 
-import androidx.annotation.StringRes;
 import androidx.annotation.RequiresApi;
 
 import java.io.File;
@@ -17,10 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import tool.xfy9326.floatpicture.R;
-import tool.xfy9326.floatpicture.Utils.Config;
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public final class LegacyDataImporter {
@@ -31,59 +27,28 @@ public final class LegacyDataImporter {
     private LegacyDataImporter() {
     }
 
-    public static Result importFrom(Context context, Uri treeUri) {
-        File stagingRoot = new File(context.getCacheDir(), "legacy_import_staging");
-        File backupRoot = new File(context.getCacheDir(), "legacy_import_backup");
-        deleteRecursively(stagingRoot);
-        deleteRecursively(backupRoot);
-
-        try {
-            if (!stagingRoot.mkdirs()) {
-                return Result.failure(R.string.legacy_import_failed_copy);
-            }
-
-            Uri selectedRoot = DocumentsContract.buildDocumentUriUsingTree(
-                    treeUri, DocumentsContract.getTreeDocumentId(treeUri));
-            List<DocumentEntry> rootEntries = listChildren(context, treeUri, selectedRoot);
-            DocumentEntry dataDirectory = findDirectory(rootEntries, "Data");
-            DocumentEntry picturesDirectory = findDirectory(rootEntries, "Pictures");
-
-            if (dataDirectory == null || picturesDirectory == null) {
-                DocumentEntry floatPictureDirectory = findDirectory(rootEntries, "FloatPicture");
-                if (floatPictureDirectory != null) {
-                    rootEntries = listChildren(context, treeUri, floatPictureDirectory.uri);
-                    dataDirectory = findDirectory(rootEntries, "Data");
-                    picturesDirectory = findDirectory(rootEntries, "Pictures");
-                }
-            }
-
-            if (dataDirectory == null || picturesDirectory == null) {
-                return Result.failure(R.string.legacy_import_invalid_folder);
-            }
-
-            ImportCounter counter = new ImportCounter();
-            copyDirectory(context, treeUri, dataDirectory.uri,
-                    new File(stagingRoot, "Data"), 0, counter);
-            copyDirectory(context, treeUri, picturesDirectory.uri,
-                    new File(stagingRoot, "Pictures"), 0, counter);
-
-            File stagedData = new File(stagingRoot, "Data");
-            if (!new File(stagedData, "PictureList.list").isFile()
-                    || !new File(stagedData, "PictureData.list").isFile()) {
-                return Result.failure(R.string.legacy_import_invalid_data);
-            }
-
-            if (!replaceCurrentData(stagingRoot, backupRoot)) {
-                return Result.failure(R.string.legacy_import_failed_replace);
-            }
-            return Result.success(counter.fileCount);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            return Result.failure(R.string.legacy_import_failed_copy);
-        } finally {
-            deleteRecursively(stagingRoot);
-            deleteRecursively(backupRoot);
+    /** Copy only into staging; the shared restore flow validates and installs it later. */
+    public static void stageFrom(Context context, Uri treeUri, File stagingRoot) throws IOException {
+        if (stagingRoot.exists() || !stagingRoot.mkdirs()) {
+            throw new IOException("Cannot create staging directory");
         }
+        Uri selectedRoot = DocumentsContract.buildDocumentUriUsingTree(
+                treeUri, DocumentsContract.getTreeDocumentId(treeUri));
+        List<DocumentEntry> entries = listChildren(context, treeUri, selectedRoot);
+        DocumentEntry data = findDirectory(entries, "Data");
+        DocumentEntry pictures = findDirectory(entries, "Pictures");
+        if (data == null || pictures == null) {
+            DocumentEntry folder = findDirectory(entries, "FloatPicture");
+            if (folder != null) {
+                entries = listChildren(context, treeUri, folder.uri);
+                data = findDirectory(entries, "Data");
+                pictures = findDirectory(entries, "Pictures");
+            }
+        }
+        if (data == null || pictures == null) throw new IOException("Invalid legacy folder");
+        ImportCounter counter = new ImportCounter();
+        copyDirectory(context, treeUri, data.uri, new File(stagingRoot, "Data"), 0, counter);
+        copyDirectory(context, treeUri, pictures.uri, new File(stagingRoot, "Pictures"), 0, counter);
     }
 
     private static List<DocumentEntry> listChildren(
@@ -128,6 +93,7 @@ public final class LegacyDataImporter {
             throw new IOException("Import directory limit exceeded");
         }
         for (DocumentEntry child : listChildren(context, treeUri, sourceDirectory)) {
+            if (child.name.equals(".TEMP") || child.name.equals(".nomedia")) continue;
             File target = new File(targetDirectory, child.name);
             if (child.directory) {
                 copyDirectory(context, treeUri, child.uri, target, depth + 1, counter);
@@ -162,50 +128,6 @@ public final class LegacyDataImporter {
         }
     }
 
-    private static boolean replaceCurrentData(File stagingRoot, File backupRoot) {
-        File destinationRoot = Objects.requireNonNull(
-                new File(Config.DEFAULT_PICTURE_DIR).getParentFile());
-        File destinationData = new File(destinationRoot, "Data");
-        File destinationPictures = new File(destinationRoot, "Pictures");
-        File stagedData = new File(stagingRoot, "Data");
-        File stagedPictures = new File(stagingRoot, "Pictures");
-        File backupData = new File(backupRoot, "Data");
-        File backupPictures = new File(backupRoot, "Pictures");
-
-        if ((!destinationRoot.isDirectory() && !destinationRoot.mkdirs())
-                || !backupRoot.mkdirs()) {
-            return false;
-        }
-
-        boolean backedUpData = !destinationData.exists() || destinationData.renameTo(backupData);
-        boolean backedUpPictures = !destinationPictures.exists()
-                || destinationPictures.renameTo(backupPictures);
-        if (!backedUpData || !backedUpPictures) {
-            restoreBackup(destinationData, backupData);
-            restoreBackup(destinationPictures, backupPictures);
-            return false;
-        }
-
-        boolean installedData = stagedData.renameTo(destinationData);
-        boolean installedPictures = stagedPictures.renameTo(destinationPictures);
-        if (!installedData || !installedPictures) {
-            deleteRecursively(destinationData);
-            deleteRecursively(destinationPictures);
-            restoreBackup(destinationData, backupData);
-            restoreBackup(destinationPictures, backupPictures);
-            return false;
-        }
-        IOMethods.setNoMedia();
-        return true;
-    }
-
-    private static void restoreBackup(File destination, File backup) {
-        if (backup.exists() && !destination.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            backup.renameTo(destination);
-        }
-    }
-
     private static DocumentEntry findDirectory(List<DocumentEntry> entries, String name) {
         for (DocumentEntry entry : entries) {
             if (entry.directory && name.equals(entry.name)) {
@@ -225,22 +147,6 @@ public final class LegacyDataImporter {
                 && name.indexOf('\0') < 0;
     }
 
-    private static void deleteRecursively(File file) {
-        if (file == null || !file.exists()) {
-            return;
-        }
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursively(child);
-                }
-            }
-        }
-        //noinspection ResultOfMethodCallIgnored
-        file.delete();
-    }
-
     private static final class DocumentEntry {
         private final Uri uri;
         private final String name;
@@ -258,37 +164,4 @@ public final class LegacyDataImporter {
         private long totalBytes;
     }
 
-    public static final class Result {
-        private final boolean successful;
-        @StringRes
-        private final int messageResource;
-        private final int importedFileCount;
-
-        private Result(boolean successful, int messageResource, int importedFileCount) {
-            this.successful = successful;
-            this.messageResource = messageResource;
-            this.importedFileCount = importedFileCount;
-        }
-
-        private static Result success(int importedFileCount) {
-            return new Result(true, R.string.legacy_import_success, importedFileCount);
-        }
-
-        private static Result failure(@StringRes int messageResource) {
-            return new Result(false, messageResource, 0);
-        }
-
-        public boolean isSuccessful() {
-            return successful;
-        }
-
-        @StringRes
-        public int getMessageResource() {
-            return messageResource;
-        }
-
-        public int getImportedFileCount() {
-            return importedFileCount;
-        }
-    }
 }

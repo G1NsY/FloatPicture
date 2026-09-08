@@ -43,8 +43,10 @@ public class LicenseActivity extends AppCompatActivity {
         LinearLayout main_layout = findViewById(R.id.layout_license);
 
         String license_application = IOMethods.readAssetText(this, Config.LICENSE_PATH_APPLICATION);
+        String legalNotices = getString(R.string.copyright) + "\n\n" + license_application
+                + "\n\n" + IOMethods.readAssetText(this, "GPL-3.0.txt");
 
-        addLicense(getString(R.string.app_name), getString(R.string.website), license_application, main_layout);
+        addLicense(getString(R.string.app_name), getString(R.string.website), legalNotices, main_layout);
     }
 
     private void addLicense(String title, String url, String data, LinearLayout main_layout) {
@@ -56,5 +58,11 @@ public class LicenseActivity extends AppCompatActivity {
         TextView textview_data = layout.findViewById(R.id.licence_data);
         textview_data.setText(data);
         main_layout.addView(layout);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
     }
 }

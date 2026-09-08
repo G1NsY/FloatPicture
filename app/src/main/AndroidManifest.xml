@@ -84,6 +84,11 @@
                 android:value=".Activities.MainActivity" />
         </activity>
 
+        <activity
+            android:name=".Activities.BackupActivity"
+            android:exported="false"
+            android:label="@string/backup_export" />
+
         <service
             android:name=".Services.NotificationService"
             android:foregroundServiceType="specialUse"
